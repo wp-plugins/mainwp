@@ -10,7 +10,7 @@ Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Manage all of your WP sites, even those on different servers, from one central dashboard that runs off from your own self-hosted WordPress install.
+Manage all of your WP sites, even those on different servers, from one central dashboard that runs off of your own self-hosted WordPress install.
 
 == Description ==
 

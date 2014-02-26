@@ -2,7 +2,7 @@
 /*
   Plugin Name: MainWP Dashboard
   Plugin URI: http://mainwp.com/
-  Description: Manage all of your WP sites, even those on different servers, from one central dashboard that runs off from your own self-hosted WordPress install.
+  Description: Manage all of your WP sites, even those on different servers, from one central dashboard that runs off of your own self-hosted WordPress install.
   Author: MainWP
   Author URI: http://mainwp.com
   Version: 1.0.0
