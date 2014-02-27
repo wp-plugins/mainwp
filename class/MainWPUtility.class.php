@@ -421,6 +421,8 @@ class MainWPUtility
         } while ($running > 0);
 
         curl_multi_close($mh);
+
+        return true;
     }
 
     static function fetchUrlAuthed(&$website, $what, $params = null)

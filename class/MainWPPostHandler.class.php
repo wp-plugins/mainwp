@@ -92,6 +92,13 @@ class MainWPPostHandler
         $this->addAction('mainwp_post_restore', array(&$this, 'mainwp_post_restore'));
         $this->addAction('mainwp_post_approve', array(&$this, 'mainwp_post_approve'));
 
+        //Page: Pages
+        $this->addAction('mainwp_page_unpublish', array(&$this, 'mainwp_page_unpublish'));
+        $this->addAction('mainwp_page_publish', array(&$this, 'mainwp_page_publish'));
+        $this->addAction('mainwp_page_trash', array(&$this, 'mainwp_page_trash'));
+        $this->addAction('mainwp_page_delete', array(&$this, 'mainwp_page_delete'));
+        $this->addAction('mainwp_page_restore', array(&$this, 'mainwp_page_restore'));
+
         //Page: Users
         $this->addAction('mainwp_user_delete', array(&$this, 'mainwp_user_delete'));
         $this->addAction('mainwp_user_role_to_administrator', array(&$this, 'mainwp_user_role_to_administrator'));
@@ -372,6 +379,40 @@ class MainWPPostHandler
         $this->secure_request('mainwp_post_restore');
     
         MainWPRecentPosts::restore();
+    }
+
+    /**
+     * Page: Recent Pages
+     */
+    function mainwp_page_unpublish()
+    {
+        $this->secure_request('mainwp_page_unpublish');
+
+        MainWPPage::unpublish();
+    }
+    function mainwp_page_publish()
+    {
+        $this->secure_request('mainwp_page_publish');
+
+        MainWPPage::publish();
+    }
+    function mainwp_page_trash()
+    {
+        $this->secure_request('mainwp_page_trash');
+
+        MainWPPage::trash();
+    }
+    function mainwp_page_delete()
+    {
+        $this->secure_request('mainwp_page_delete');
+
+        MainWPPage::delete();
+    }
+    function mainwp_page_restore()
+    {
+        $this->secure_request('mainwp_page_restore');
+
+        MainWPPage::restore();
     }
 
     /**

@@ -44,15 +44,6 @@ class MainWPManageSitesView
         <img src="<?php echo plugins_url('images/icons/mainwp-sites.png', dirname(__FILE__)); ?>"
              style="float: left; margin-right: 8px; margin-top: 7px ;" alt="MainWP Sites" height="32"/>
         <h2><?php _e('Sites','mainwp'); ?></h2><div style="clear: both;"></div><br/>
-        <?php
-            $requestsDB = get_option('mainwp_requests');
-            $maxOccurences = isset($requestsDB['maxOccurences']) ? unserialize(base64_decode($requestsDB['maxOccurences'])) : 0;
-            if ($maxOccurences > 0)
-            {
-                $current = MainWPDB::Instance()->getWebsitesCount();
-                ?><div class="<?php echo ($current >= $maxOccurences ? 'mainwp_info-box-red' : 'mainwp_info-box-yellow'); ?>" style="clear: none !important; margin-right: 150px;"><?php _e('Your current installation is using','mainwp'); ?> <strong><?php echo $current; ?></strong> <?php _e('of the','mainwp'); ?> <strong><?php echo $maxOccurences; ?></strong> <?php _e('available sites on your MainWP plan.','mainwp'); ?> <a href="http://mainwp.com/member/login/index" target="_blank" class="button-primary"><?php _e('Upgrade your plan for more sites','mainwp'); ?></a> <a href="#" target="_blank" class="button mainwp-api-refresh"><?php _e('Update site count after upgrading your plan','mainwp'); ?></a></div><?php
-            }
-    ?>
         <div class="mainwp-tabs" id="mainwp-tabs">
             <a class="nav-tab pos-nav-tab <?php if ($shownPage == '') { echo "nav-tab-active"; } ?>" href="admin.php?page=managesites"><?php _e('Manage','mainwp'); ?></a>
             <a class="nav-tab pos-nav-tab <?php if ($shownPage == 'AddNew') { echo "nav-tab-active"; } ?>" href="admin.php?page=managesites&do=new"><?php _e('Add New','mainwp'); ?></a>
@@ -229,11 +220,6 @@ class MainWPManageSitesView
                     to Dashboard','mainwp'); ?></a>
                 <?php
             }
-    }
-
-    public static function renderNewSite()
-    {
-        _e('Maximum number of available sites on your MainWP plan have been reached.','mainwp'); ?> <a href="http://mainwp.com/member/login/index" target="_blank"><?php _e('Upgrade your plan for more sites','mainwp'); ?></a><?php
     }
 
     public static function _renderNewSite(&$groups)
@@ -747,7 +733,7 @@ class MainWPManageSitesView
     }
 
 
-    public static function renderAllSites(&$website, $unableToEdit, $updated, $groups, $statusses, $pluginDir)
+    public static function renderAllSites(&$website, $updated, $groups, $statusses, $pluginDir)
     {
         $remote_destinations = apply_filters('mainwp_backups_remote_get_destinations', null, array('website' => $website->id));
         $hasRemoteDestinations = ($remote_destinations == null ? $remote_destinations : count($remote_destinations));
@@ -755,10 +741,6 @@ class MainWPManageSitesView
         <div class="error below-h2" style="display: none;" id="ajax-error-zone"></div>
         <div id="ajax-information-zone" class="updated" style="display: none;"></div>
         <?php
-        if ($unableToEdit)
-        {
-            ?><div class="error below-h2"><p><?php _e('You have exceeded the maximum number of available sites, you will not be able to change any more settings.','mainwp'); ?> <a href="http://mainwp.com/member/login/index" target="_blank"><?php _e('Upgrade your plan for more sites','mainwp'); ?></a></p></div><?php
-        }
         if ($updated)
         {
             ?>
@@ -893,16 +875,10 @@ class MainWPManageSitesView
             ?>
             <?php
             do_action('mainwp-extension-sites-edit', $website);
-
-            if (!$unableToEdit) { ?><p class="submit"><input type="submit" name="submit" id="submit" class="button-primary"
-                                     value="<?php _e('Update Site','mainwp'); ?>"/></p><?php } ?>
+            ?><p class="submit"><input type="submit" name="submit" id="submit" class="button-primary"
+                                     value="<?php _e('Update Site','mainwp'); ?>"/></p>
         </form>
         <?php
-    }
-
-    public static function maximumReached()
-    {
-        return __('Maximum number of available sites on your MainWP plan have been reached. <a href="http://mainwp.com/member/login/index" target="_blank">Upgrade your plan for more sites</a>','mainwp');
     }
 
     public static function _reconnectSite($website)

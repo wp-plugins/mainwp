@@ -749,14 +749,14 @@ class MainWPUser
             $selected_sites = array();
             if (isset($_POST['selected_sites']) && is_array($_POST['selected_sites'])) {
                 foreach ($_POST['selected_sites'] as $selected) {
-                    $selected_sites[$selected] = true;
+                    $selected_sites[] = $selected;
                 }
             }
 
             $selected_groups = array();
             if (isset($_POST['selected_groups']) && is_array($_POST['selected_groups'])) {
                 foreach ($_POST['selected_groups'] as $selected) {
-                    $selected_groups[$selected] = true;
+                    $selected_groups[] = $selected;
                 }
             }
             if (($_POST['select_by'] == 'group' && count($selected_groups) == 0) || ($_POST['select_by'] == 'site' && count($selected_sites) == 0)) {

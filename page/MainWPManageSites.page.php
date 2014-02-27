@@ -86,28 +86,16 @@ class MainWPManageSites
 
     public static function renderNewSite()
     {
-        $requestsDB = get_option('mainwp_requests');
-        $maxOccurences = isset($requestsDB['maxOccurences']) ? unserialize(base64_decode($requestsDB['maxOccurences'])) : 0;
-
-        if (($maxOccurences > 0) && (MainWPDB::Instance()->getWebsitesCount() >= $maxOccurences))
+        if (isset($_REQUEST['mainwp_managesites_chk_bulkupload']) && $_REQUEST['mainwp_managesites_chk_bulkupload'])
         {
-            self::renderHeader('AddNew');
-            MainWPManageSitesView::renderNewSite();
-            self::renderFooter('AddNew');
+            self::renderBulkUpload();
         }
         else
         {
-            if (isset($_REQUEST['mainwp_managesites_chk_bulkupload']) && $_REQUEST['mainwp_managesites_chk_bulkupload'])
-            {
-                self::renderBulkUpload();
-            }
-            else
-            {
-                $groups = MainWPDB::Instance()->getGroupsForCurrentUser();
-                self::renderHeader('AddNew');
-                MainWPManageSitesView::_renderNewSite($groups);
-                self::renderFooter('AddNew');
-            }
+            $groups = MainWPDB::Instance()->getGroupsForCurrentUser();
+            self::renderHeader('AddNew');
+            MainWPManageSitesView::_renderNewSite($groups);
+            self::renderFooter('AddNew');
         }
     }
 
@@ -708,13 +696,9 @@ class MainWPManageSites
             $groups = MainWPDB::Instance()->getGroupsForCurrentUser();
             $statusses = array('hourly', '2xday', 'daily', 'weekly');
 
-            $requestsDB = get_option('mainwp_requests');
-            $maxOccurences = isset($requestsDB['maxOccurences']) ? unserialize(base64_decode($requestsDB['maxOccurences'])) : 0;
-            $unableToEdit = (($maxOccurences > 0) && (MainWPDB::Instance()->getWebsitesCount() > $maxOccurences));
-
             $pluginDir = $website->pluginDir;
             self::renderHeader('ManageSitesEdit');
-            MainWPManageSitesView::renderAllSites($website, $unableToEdit, $updated, $groups, $statusses, $pluginDir);
+            MainWPManageSitesView::renderAllSites($website, $updated, $groups, $statusses, $pluginDir);
             self::renderFooter('ManageSitesEdit');
         }
     }
@@ -729,36 +713,27 @@ class MainWPManageSites
         }
         else
         {
-            $requestsDB = get_option('mainwp_requests');
-            $maxOccurences = isset($requestsDB['maxOccurences']) ? unserialize(base64_decode($requestsDB['maxOccurences'])) : 0;
-            if (($maxOccurences > 0) && (MainWPDB::Instance()->getWebsitesCount() >= $maxOccurences))
+            try
             {
-                $ret['response'] = 'ERROR ' . MainWPManageSitesView::maximumReached();
-            }
-            else
-            {
-                try
-                {
-                    $information = MainWPUtility::fetchUrlNotAuthed($_POST['url'], $_POST['admin'], 'stats'); //Fetch the stats with the given admin name
+                $information = MainWPUtility::fetchUrlNotAuthed($_POST['url'], $_POST['admin'], 'stats'); //Fetch the stats with the given admin name
 
-                    if (isset($information['wpversion']))
-                    { //Version found - able to add
-                        $ret['response'] = 'OK';
-                    }
-                    else if (isset($information['error']))
-                    { //Error
-                        $ret['response'] = 'ERROR ' . $information['error'];
-                    }
-                    else
-                    { //Should not occur?
-                        $ret['response'] = 'ERROR';
-                    }
+                if (isset($information['wpversion']))
+                { //Version found - able to add
+                    $ret['response'] = 'OK';
                 }
-                catch (MainWPException $e)
-                {
-                    //Exception - error
-                    $ret['response'] = $e->getMessage();
+                else if (isset($information['error']))
+                { //Error
+                    $ret['response'] = 'ERROR ' . $information['error'];
                 }
+                else
+                { //Should not occur?
+                    $ret['response'] = 'ERROR';
+                }
+            }
+            catch (MainWPException $e)
+            {
+                //Exception - error
+                $ret['response'] = $e->getMessage();
             }
         }
         $ret['check_me'] = (isset($_POST['check_me']) ? $_POST['check_me'] : null);
@@ -800,13 +775,7 @@ class MainWPManageSites
         $error = '';
         $message = '';
 
-        $requestsDB = get_option('mainwp_requests');
-        $maxOccurences = isset($requestsDB['maxOccurences']) ? unserialize(base64_decode($requestsDB['maxOccurences'])) : 0;
-        if (($maxOccurences > 0) && (MainWPDB::Instance()->getWebsitesCount() >= $maxOccurences))
-        {
-            $error = MainWPManageSitesView::maximumReached();
-        }
-        else if (isset($_POST['managesites_add_wpurl']) && isset($_POST['managesites_add_wpadmin']))
+        if (isset($_POST['managesites_add_wpurl']) && isset($_POST['managesites_add_wpadmin']))
         {
             //Check if already in DB
             $website = MainWPDB::Instance()->getWebsitesByUrl($_POST['managesites_add_wpurl']);

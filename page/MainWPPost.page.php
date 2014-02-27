@@ -606,14 +606,14 @@ class MainWPPost
 
                 $dbwebsites = array();
                 if ($selected_by == 'site') { //Get all selected websites
-                    foreach ($selected_sites as $k => $v) {
+                    foreach ($selected_sites as $k) {
                         if (MainWPUtility::ctype_digit($k)) {
                             $website = MainWPDB::Instance()->getWebsiteById($k);
                             $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
                         }
                     }
                 } else { //Get all websites from the selected groups
-                    foreach ($selected_groups as $k => $v) {
+                    foreach ($selected_groups as $k) {
                         if (MainWPUtility::ctype_digit($k)) {
                             $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($k));
                             while ($websites && ($website = @mysql_fetch_object($websites)))
@@ -709,8 +709,9 @@ class MainWPPost
                     '_ezin_post_category' => base64_encode(serialize($cats))
                 );
 
-                try {
-                        $information = MainWPUtility::fetchUrlAuthed($website, 'newpost', $post_data);
+                try
+                {
+                    $information = MainWPUtility::fetchUrlAuthed($website, 'newpost', $post_data);
                 }
                 catch (Exception $e)
                 {

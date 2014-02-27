@@ -282,10 +282,10 @@ class MainWPExtensions
     {
         if (!self::hookVerify($pluginFile, $key))
         {
-            return;
+            return false;
         }
 
-        MainWPUtility::fetchUrlsAuthed($dbwebsites, $what, $params, $handle, $output);
+        return MainWPUtility::fetchUrlsAuthed($dbwebsites, $what, $params, $handle, $output);
     }
 
     public static function hookFetchUrlAuthed($pluginFile, $key, $websiteId, $what, $params)

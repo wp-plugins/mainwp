@@ -202,8 +202,8 @@ class MainWPSystem
         add_filter('mainwp-getsites', array(MainWPExtensions::getClassName(), 'hookGetSites'), 10, 3);
         add_filter('mainwp-getdbsites', array(MainWPExtensions::getClassName(), 'hookGetDBSites'), 10, 4);
         add_filter('mainwp-getgroups', array(MainWPExtensions::getClassName(), 'hookGetGroups'), 10, 3);
-        add_action('mainwp_fetchurlsauthed', array(MainWPExtensions::getClassName(), 'hookFetchUrlsAuthed'), 10, 7);
-        add_filter('mainwp_fetchurlauthed', array(&$this, 'filter_fetchUrlAuthed'), 10, 7);
+        add_action('mainwp_fetchurlsauthed', array(&$this, 'filter_fetchUrlsAuthed'), 10, 7);
+        add_filter('mainwp_fetchurlauthed', array(&$this, 'filter_fetchUrlAuthed'), 10, 5);
         add_filter('mainwp_getdashboardsites', array(MainWPExtensions::getClassName(), 'hookGetDashboardSites'), 10, 7);
 
         $this->posthandler = new MainWPPostHandler();
@@ -217,6 +217,11 @@ class MainWPSystem
         MainWPPage::init();
         MainWPThemes::init();
         MainWPPlugins::init();
+    }
+
+    function filter_fetchUrlsAuthed($pluginFile, $key, $dbwebsites, $what, $params, $handle, $output)
+    {
+        return MainWPExtensions::hookFetchUrlsAuthed($pluginFile, $key, $dbwebsites, $what, $params, $handle, $output);
     }
 
     function filter_fetchUrlAuthed($pluginFile, $key, $websiteId, $what, $params)

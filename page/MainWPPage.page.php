@@ -436,6 +436,36 @@ class MainWPPage
         }
     }
 
+    public static function publish()
+    {
+        MainWPRecentPosts::action('publish');
+        die(json_encode(array('result' => 'Page has been published')));
+    }
+
+    public static function unpublish()
+    {
+        MainWPRecentPosts::action('unpublish');
+        die(json_encode(array('result' => 'Page has been unpublished')));
+    }
+
+    public static function trash()
+    {
+        MainWPRecentPosts::action('trash');
+        die(json_encode(array('result' => 'Page has been moved to trash')));
+    }
+
+    public static function delete()
+    {
+        MainWPRecentPosts::action('delete');
+        die(json_encode(array('result' => 'Page has been permanently deleted')));
+    }
+
+    public static function restore()
+    {
+        MainWPRecentPosts::action('restore');
+        die(json_encode(array('result' => 'Page has been restored')));
+    }
+
     public static function renderBulkAdd()
     {
         //Loads the post screen via AJAX, which redirects to the "posting()" to really post the posts to the saved sites
@@ -492,14 +522,14 @@ class MainWPPage
 
                 $dbwebsites = array();
                 if ($selected_by == 'site') { //Get all selected websites
-                    foreach ($selected_sites as $k => $v) {
+                    foreach ($selected_sites as $k) {
                         if (MainWPUtility::ctype_digit($k)) {
                             $website = MainWPDB::Instance()->getWebsiteById($k);
                             $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
                         }
                     }
                 } else { //Get all websites from the selected groups
-                    foreach ($selected_groups as $k => $v) {
+                    foreach ($selected_groups as $k) {
                         if (MainWPUtility::ctype_digit($k)) {
                             $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($k));
                             while ($websites && ($website = @mysql_fetch_object($websites)))
