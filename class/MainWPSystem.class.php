@@ -231,9 +231,11 @@ class MainWPSystem
 
     public function in_plugin_update_message($plugin_data, $r)
     {
-        if ($r->key_status == 'NOK') echo '<br />Your Log-in and Password are invalid, please update your login settings <a href="'.admin_url('admin.php?page=Settings').'">here</a>.';
-        else if (empty($r->package)) echo '<br />Your update license has expired, please log into <a href="http://mainwp.com/member">the members area</a> and upgrade your support and update license.';
-    }
+        if (empty($r) || !is_object($r)) return;
+
+        if (property_exists($r, 'key_status') && $r->key_status == 'NOK') echo '<br />Your Log-in and Password are invalid, please update your login settings <a href="'.admin_url('admin.php?page=Settings').'">here</a>.';
+        else if (property_exists($r, 'package') && empty($r->package)) echo '<br />Your update license has expired, please log into <a href="http://mainwp.com/member">the members area</a> and upgrade your support and update license.';
+	}
 
     public function localization()
     {
