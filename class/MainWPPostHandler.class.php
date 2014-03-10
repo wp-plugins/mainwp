@@ -536,7 +536,7 @@ class MainWPPostHandler
             $excludedFolder = array_map(array('MainWPUtility', 'trimSlashes'), $excludedFolder);
             $excludedFolder = implode(",", $excludedFolder);
 
-            die(json_encode(array('result' => MainWPManageSites::backup($_POST['site_id'], $_POST['type'], $_POST['subfolder'], $excludedFolder, $_POST['filename']))));
+            die(json_encode(array('result' => MainWPManageSites::backup($_POST['site_id'], $_POST['type'], isset($_POST['subfolder']) ? $_POST['subfolder'] : '', $excludedFolder, $_POST['filename']))));
         }
         catch (MainWPException $e)
         {

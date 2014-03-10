@@ -602,12 +602,10 @@ jQuery(document).ready(function () {
 mainwp_refresh_dashboard = function ()
 {
     var allWebsiteIds = jQuery('.dashboard_wp_id').map(function(indx, el){ return jQuery(el).val(); });
-
     for (var i = 0; i < allWebsiteIds.length; i++)
     {
         dashboard_update_site_status(allWebsiteIds[i], __('PENDING'));
     }
-
     var nrOfWebsites = allWebsiteIds.length;
     jQuery('#refresh-status-progress').progressbar({value: 0, max: nrOfWebsites});
     jQuery('#refresh-status-box').dialog({
@@ -616,7 +614,6 @@ mainwp_refresh_dashboard = function ()
         width: 500,
         modal: true,
         close: function(event, ui) {bulkTaskRunning = false; jQuery('#refresh-status-box').dialog('destroy'); location.href = location.href.replace('&refresh=yes', '');}});
-
     dashboard_update(allWebsiteIds);
 };
 
@@ -689,15 +686,12 @@ dashboard_update_next = function()
 {
     currentThreads++;
     websitesLeft--;
-
     var websiteId = websitesToUpdate[currentWebsite++];
     dashboard_update_site_status(websiteId, __('UPDATING'));
-
     var data = mainwp_secure_data({
         action:'mainwp_syncsites',
         wp_id: websiteId
     });
-
     jQuery.ajax({
         type: 'POST',
         url: ajaxurl,
@@ -705,7 +699,7 @@ dashboard_update_next = function()
         success: function(pWebsiteId) { return function(response) { if (response.error) { dashboard_update_site_status(websiteId, '<font color="red">' + __('ERROR') + '</font>'); websitesError++; } else {dashboard_update_site_status(websiteId, __('DONE'));} dashboard_update_done(); } }(websiteId),
         error: function(pWebsiteId) { return function(response) { dashboard_update_site_status(websiteId, '<font color="red">' +  __('ERROR') + '</font>');  websitesError++; dashboard_update_done(); } }(websiteId),
         dataType: 'json'
-    })
+    });
 };
 
 
@@ -1212,30 +1206,31 @@ rightnow_upgrade_plugintheme = function (what, id, name) {
 rightnow_upgrade_plugintheme_all = function (what, id, noCheck) {
     rightnowContinueAfterBackup = function(pId, pWhat) { return function()
     {
-        if (pId == undefined) {
-            jQuery("#wp_" + pWhat + "_upgrades [id^=wp_upgrade_" + pWhat + "]").each(function (index, value) {
-                var re = new RegExp('^wp_upgrade_' + pWhat + '_([0-9]+)$');
-                if (divId = re.exec(value.id)) {
-                    if (jQuery('#wp_upgraded_' + pWhat + '_' + divId[1]).val() == 0) {
-                        rightnow_upgrade_plugintheme_all(pWhat, parseInt(divId[1]), true);
-                    }
-                }
-            });
-        }
-        else {
+//        if (pId == undefined) {
+//            jQuery("#wp_" + pWhat + "_upgrades [id^=wp_upgrade_" + pWhat + "]").each(function (index, value) {
+//                var re = new RegExp('^wp_upgrade_' + pWhat + '_([0-9]+)$');
+//                if (divId = re.exec(value.id)) {
+//                    if (jQuery('#wp_upgraded_' + pWhat + '_' + divId[1]).val() == 0) {
+//                        rightnow_upgrade_plugintheme_all(pWhat, parseInt(divId[1]), true);
+//                    }
+//                }
+//            });
+//        }
+//        else {
             rightnow_show_if_required(pWhat+'_upgrades_'+pId, true);
             var list = [];
             jQuery("#wp_" + pWhat + "_upgrades_" + pId + " [id^=wp_upgrade_" + pWhat + "_" + pId + "]").each(function (index, value) {
                 var re = new RegExp('^wp_upgrade_' + pWhat + '_' + pId + '_(.*)$');
                 if (divId = re.exec(value.id)) {
                     if (document.getElementById('wp_upgraded_' + pWhat + '_' + pId + '_' + divId[1]).value == 0) {
+                        //value.parent().attr('premium')
                         list.push(divId[1]);
                     }
                 }
             });
 
             rightnow_upgrade_plugintheme_list(what, pId, list, true);
-        }
+//        }
     } }(id, what);
 
     if (noCheck)
@@ -1247,23 +1242,23 @@ rightnow_upgrade_plugintheme_all = function (what, id, noCheck) {
     var sitesToUpdate = [];
     var siteNames = [];
 
-    if (id == undefined) {
-        jQuery("#wp_" + what + "_upgrades [id^=wp_upgrade_" + what + "]").each(function (index, value) {
-            var re = new RegExp('^wp_upgrade_' + what + '_([0-9]+)$');
-            if (divId = re.exec(value.id)) {
-                if (jQuery('#wp_upgraded_' + what + '_' + divId[1]).val() == 0) {
-                    sitesToUpdate.push(parseInt(divId[1]));
-                    siteNames[parseInt(divId[1])] = jQuery('.mainwp_wordpress_upgrade[site_id="' + parseInt(divId[1]) + '"]').attr('site_name');
-                }
-            }
-        });
-    }
-    else
-    {
+//    if (id == undefined) {
+//        jQuery("#wp_" + what + "_upgrades [id^=wp_upgrade_" + what + "]").each(function (index, value) {
+//            var re = new RegExp('^wp_upgrade_' + what + '_([0-9]+)$');
+//            if (divId = re.exec(value.id)) {
+//                if (jQuery('#wp_upgraded_' + what + '_' + divId[1]).val() == 0) {
+//                    sitesToUpdate.push(parseInt(divId[1]));
+//                    siteNames[parseInt(divId[1])] = jQuery('.mainwp_wordpress_upgrade[site_id="' + parseInt(divId[1]) + '"]').attr('site_name');
+//                }
+//            }
+//        });
+//    }
+//    else
+//    {
         rightnow_show_if_required(what+'_upgrades_'+id, true);
         sitesToUpdate.push(id);
         siteNames[id] = jQuery('div[site_id="' + id + '"]').attr('site_name');
-    }
+//    }
 
     return mainwp_rightnow_checkBackups(sitesToUpdate, siteNames);
 };
@@ -1982,7 +1977,11 @@ jQuery(document).ready(function () {
             action:'mainwp_testwp',
             siteid: jQuery(thisEl.parents('tr')[0]).attr('siteid')
         });
-        jQuery.post(ajaxurl, data, function(pThisEl, pLoadingEl) { return function (response) {
+        jQuery.ajax({
+            type: 'POST',
+            url: ajaxurl,
+            data: data,
+            success: function(pThisEl, pLoadingEl) { return function (response) {
             pLoadingEl.hide();
             pThisEl.show();
             jQuery('.mainwp_site_testconnection').attr('href', '#');
@@ -2012,7 +2011,8 @@ jQuery(document).ready(function () {
             {
                 setHtml('#mainwp_managesites_add_errors', response.sitename+ ': '+__('Invalid response from the server, please try again.'));
             }
-        } }(thisEl, loadingEl), 'json');
+        } }(thisEl, loadingEl),
+            dataType: 'json'});
         return false;
     });
     managesites_init();
@@ -3545,7 +3545,10 @@ backup = function ()
         width: 500,
         modal: true,
         close: function(event, ui) { if (!backupError) { location.reload(); }}});
-    jQuery.post(ajaxurl, data, function(pSiteId, pRemoteDestinations) { return function (response) {
+    jQuery.ajax({url: ajaxurl,
+                data: data,
+                method: 'POST',
+                success: function(pSiteId, pRemoteDestinations) { return function (response) {
         if (response.error)
         {
             appendToDiv('#managesite-backup-status-text', ' <font color="red">Error:' + getErrorMessage(response.error) + '</font>');
@@ -3557,7 +3560,7 @@ backup = function ()
             backup_download_file(pSiteId, response.result.type, response.result.url, response.result.local, response.result.regexfile, response.result.size, response.result.subfolder, pRemoteDestinations);
         }
 
-    } }(jQuery('#backup_site_id').val(), remote_destinations), 'json');
+    } }(jQuery('#backup_site_id').val(), remote_destinations), dataType: 'json'});
 };
 
 backup_download_file = function(pSiteId, type, url, file, regexfile, size, subfolder, remote_destinations)
@@ -5265,7 +5268,7 @@ appendToDiv = function(pSelector, pText, pScrolldown, pShowTime)
 
     var theDiv = jQuery(pSelector);
     theDiv.append('<br />' + (pShowTime ? dateToHMS(new Date()) + ' ' : '') + pText);
-    if (pScrolldown) theDiv.animate({scrollTop: theDiv.height() * 2}, 100);
+    if (pScrolldown) theDiv.animate({scrollTop: theDiv.prop("scrollHeight")}, 100);
 };
 
 jQuery.fn.exists = function () {
@@ -5456,7 +5459,6 @@ jQuery(document).ready(function($) {
     jQuery('.mainwp-show-qsg').on('click', function(){
         jQuery('.mainwp-qsg').hide();
         var num = jQuery(this).attr('number');
-        console.log(num);
         jQuery('.mainwp-qsg[number="' + num + '"]').show();
         mainwp_setCookie('qsg_number', jQuery(this).attr('number'));
         return false;
@@ -5484,7 +5486,6 @@ mainwp_showhide_quick_guide = function(show, tut) {
     var tut = mainwp_getCookie('qsg_number');
     if (typeof tut == "undefined" || !tut)
         tut = 1;
-    console.log(show + '===' + tut);
     if (show == 'on') {
         jQuery('#mainwp-qsg-tips').show();
         jQuery('#mainwp-quick-start-guide').hide();
@@ -5524,3 +5525,10 @@ function mainwp_getCookie(c_name)
     }
     return "";
 }
+
+jQuery(document).on('click', '#mainwp-ext-dismiss', function()
+{
+    jQuery('#mainwp-ext-notice').hide();
+
+ return false;
+});

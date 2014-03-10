@@ -74,12 +74,12 @@ class MainWPManageSites
         MainWPManageSitesView::initMenuSubPages(self::$subPages);
     }
 
-    private static function renderHeader($shownPage)
+    public static function renderHeader($shownPage)
     {
         MainWPManageSitesView::renderHeader($shownPage, self::$subPages);
     }
 
-    private static function renderFooter($shownPage)
+    public static function renderFooter($shownPage)
     {
         MainWPManageSitesView::renderFooter($shownPage, self::$subPages);
     }
@@ -477,7 +477,7 @@ class MainWPManageSites
         add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPRecentPages::getName(), array(MainWPRecentPages::getClassName(), 'render'), self::$page, 'normal', 'core');
         add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPShortcuts::getName(), array(MainWPShortcuts::getClassName(), 'render'), self::$page, 'normal', 'core');
         add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPSecurityIssues::getMetaboxName(), array(MainWPSecurityIssues::getClassName(), 'renderMetabox'), self::$page, 'normal', 'core');
-        add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPManageSites::getMetaboxName(), array(MainWPManageSites::getClassName(), 'renderMetabox'), self::$page, 'normal', 'core');
+        if (get_option('mainwp_seo') == 1) add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPManageSites::getMetaboxName(), array(MainWPManageSites::getClassName(), 'renderMetabox'), self::$page, 'normal', 'core');
         add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPManageBackups::getMetaboxName(), array(MainWPManageBackups::getClassName(), 'renderMetabox'), self::$page, 'normal', 'core');
 
         $extMetaBoxs = MainWPSystem::Instance()->apply_filter('mainwp-getmetaboxes', array());

@@ -2,7 +2,7 @@
 class MainWPDB
 {
     //Config
-    private $mainwp_db_version = '5.6';
+    private $mainwp_db_version = '5.7';
     //Private
     private $table_prefix;
     //Singleton
@@ -79,6 +79,7 @@ class MainWPDB
   wp_upgrades longtext NOT NULL,
   plugin_upgrades longtext NOT NULL,
   theme_upgrades longtext NOT NULL,
+  premium_upgrades longtext NOT NULL,
   uptodate longtext NOT NULL,
   securityIssues longtext NOT NULL,
   recent_comments longtext NOT NULL,
@@ -670,6 +671,7 @@ class MainWPDB
                 'wp_upgrades' => '',
                 'plugin_upgrades' => '',
                 'theme_upgrades' => '',
+                'premium_upgrades' => '',
                 'uptodate' => '',
                 'securityIssues' => '',
                 'recent_comments' => '',

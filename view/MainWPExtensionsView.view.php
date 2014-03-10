@@ -48,6 +48,10 @@ class MainWPExtensionsView
     public static function render(&$extensions)
     {
         ?>
+        <div class="mainwp_info-box" id="mainwp-ext-notice">
+            <span><?php _e('To enable extensions you need to add your MainWP login info in the <a href="admin.php?page=Settings" style="text-decoration: none;">Settings Page</a>. &nbsp;&nbsp;For more help review <a href="http://docs.mainwp.com/how-to-install-mainwp-extensions/" target="_blank" style="text-decoration: none;">this document.</a>','mainwp'); ?></span>
+            <span style="float: right;"><a id="mainwp-ext-dismiss" style="text-decoration: none;" href="#"><?php _e('Dismiss','mainwp'); ?></a></span>
+        </div>
     <br/><br/><h2><?php printf(_n('%d Installed MainWP Extension', '%d Installed MainWP Extensions', (count($extensions) == 1 ? 1 : 2), 'mainwp'), count($extensions)); ?></h2>
         <div id="mainwp-more-extensions-button"><a href="http://extensions.mainwp.com/" target="_blank" class="mainwp-more-extensions-button"><?php _e('Get more extensions', 'mainwp'); ?></a></div>
     <hr/>

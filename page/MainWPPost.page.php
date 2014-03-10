@@ -680,61 +680,61 @@ class MainWPPost
     <?php
     }
     
-    public static function postingContent($id, $timestamp, $cats, $websiteId )
-    {
-        if (intval($id) > 0) {
-            $post = get_post($id);
-            if ($post) {
-                $cats = is_array($cats) ? $cats  : array();
+    // public static function postingContent($id, $timestamp, $cats, $websiteId )
+    // {
+        // if (intval($id) > 0) {
+            // $post = get_post($id);
+            // if ($post) {
+                // $cats = is_array($cats) ? $cats  : array();
                 // $post_tags = base64_decode(get_post_meta($id, '_tags', true));
                 // $post_slug = base64_decode(get_post_meta($id, '_slug', true));
-                $post_custom = get_post_custom($id);
-//                        $results = apply_filters('mainwp-pre-posting-posts', array($post), true);
-//                        $post = $results[0];             
-                $new_post = array(
-                    'post_title' => $post->post_title,
-                    'post_content' => $post->post_content,
-                    'post_date' => date('Y-m-d H:i:s', $timestamp),
-                    'post_status' => $post->post_status,
-                    'post_type' => $post->post_type,
-                    'id_spin' => $post->ID,
-                );
+                // $post_custom = get_post_custom($id);
+                       // $results = apply_filters('mainwp-pre-posting-posts', array($post), true);
+                       // $post = $results[0];
+                // $new_post = array(
+                    // 'post_title' => $post->post_title,
+                    // 'post_content' => $post->post_content,
+                    // 'post_date' => date('Y-m-d H:i:s', $timestamp),
+                    // 'post_status' => $post->post_status,
+                    // 'post_type' => $post->post_type,
+                    // 'id_spin' => $post->ID,
+                // );
 
-                $website = MainWPDB::Instance()->getWebsiteById($websiteId);
-                if (!MainWPUtility::can_edit_website($website)) return false;
+                // $website = MainWPDB::Instance()->getWebsiteById($websiteId);
+                // if (!MainWPUtility::can_edit_website($website)) return false;
 
-                $post_data = array(
-                    'new_post' => base64_encode(serialize($new_post)),
-                    'post_custom' => base64_encode(serialize($post_custom)),
-                    '_ezin_post_category' => base64_encode(serialize($cats))
-                );
+                // $post_data = array(
+                    // 'new_post' => base64_encode(serialize($new_post)),
+                    // 'post_custom' => base64_encode(serialize($post_custom)),
+                    // '_ezin_post_category' => base64_encode(serialize($cats))
+                // );
 
-                try
-                {
-                    $information = MainWPUtility::fetchUrlAuthed($website, 'newpost', $post_data);
-                }
-                catch (Exception $e)
-                {
-                    throw  $e;
-                }
+                // try
+                // {
+                    // $information = MainWPUtility::fetchUrlAuthed($website, 'newpost', $post_data);
+                // }
+                // catch (Exception $e)
+                // {
+                    // throw  $e;
+                // }
 
-                $ret = array();
-                if (is_array($information))
-                {
-                    $ret['wp_insert_id'] = $information['added_id'];
-                    $ret['wp_insert_link'] = $information['link'];
+                // $ret = array();
+                // if (is_array($information))
+                // {
+                    // $ret['wp_insert_id'] = $information['added_id'];
+                    // $ret['wp_insert_link'] = $information['link'];
 
-                    if (($information['added'] == 1) && (isset($information['added_id'])))
-                    {
-                        do_action('mainwp-post-posting-post', $website, $information['added_id'], (isset($information['link']) ? $information['link'] : null));
-                    }
-                }
-                return $ret;
-            }
-        }
+                    // if (($information['added'] == 1) && (isset($information['added_id'])))
+                    // {
+                        // do_action('mainwp-post-posting-post', $website, $information['added_id'], (isset($information['link']) ? $information['link'] : null));
+                    // }
+                // }
+                // return $ret;
+            // }
+        // }
 
-        return false;
-    }
+        // return false;
+    // }
     
      public static function PostsGetTerms_handler($data, $website, &$output)
     {
@@ -921,74 +921,74 @@ class MainWPPost
         return $results;
     }    
     
-    public static function getTotalEZinePost($startdate, $enddate,  $keyword_meta, $websiteId )
-    {
-        if (empty($keyword_meta)) return;
-        if (!MainWPUtility::ctype_digit($websiteId)) return;
-        $website = MainWPDB::Instance()->getWebsiteById($websiteId);
-        if (!MainWPUtility::can_edit_website($website)) return;
-        try
-        {
-            $results = MainWPUtility::fetchUrlAuthed($website, 'get_total_ezine_post', array('start_date' => base64_encode($startdate),
-                'end_date' => base64_encode($enddate),
-                'keyword_meta' => base64_encode($keyword_meta)));
-        }
-        catch (MainWPException $e)
-        {
-            return;
-        }
-        return $results;
-          
-    }
-    
-    public static function GetNextTime_handler($data, $website, &$output)
-    {          
-        if (preg_match('/<mainwp>(.*)<\/mainwp>/', $data, $results) > 0) {
-            $result = $results[1];
-            $information = unserialize(base64_decode($result));
-            unset($results);
-            unset($result);
-			if(isset($information['error']))
-			{
-				$output->error = $information['error'];
-			}
-			else
-			{
-					if (is_array($information) && isset($information['next_post_date'])) {
-							$time = strtotime($information['next_post_date']);
-							$time_next = strtotime($output->next_post_date);
-							if ($time > 0)
-							{
-								if ($time_next == 0 || $time_next > $time)
-								{
-									$output->next_post_date =  date('Y-m-d H:i:s', $time);
-									$output->next_post_id = $information['next_post_id'];   ;
-									$output->next_post_website_id = $website->id;
-									$output->next_posts= $information['next_posts'];
-									$output->error = NULL;
-								}
-							}
-					}
-			}
-        }        
-    }
+    // public static function getTotalEZinePost($startdate, $enddate,  $keyword_meta, $websiteId )
+    // {
+        // if (empty($keyword_meta)) return;
+        // if (!MainWPUtility::ctype_digit($websiteId)) return;
+        // $website = MainWPDB::Instance()->getWebsiteById($websiteId);
+        // if (!MainWPUtility::can_edit_website($website)) return;
+        // try
+        // {
+            // $results = MainWPUtility::fetchUrlAuthed($website, 'get_total_ezine_post', array('start_date' => base64_encode($startdate),
+                // 'end_date' => base64_encode($enddate),
+                // 'keyword_meta' => base64_encode($keyword_meta)));
+        // }
+        // catch (MainWPException $e)
+        // {
+            // return;
+        // }
+        // return $results;
 
-    public static function getNextTimeToPost($post_type_function = 'get_next_time_to_post')
-    {
-        $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
-        $dbwebsites = array();
-        while ($websites && ($website = @mysql_fetch_object($websites)))
-        {
-            $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
-        }
-        @mysql_free_result($websites);
-        $output = new stdClass();
-        if (count($dbwebsites) > 0)
-        {
-            MainWPUtility::fetchUrlsAuthed($dbwebsites, $post_type_function, '', array(MainWPPost::getClassName(), 'GetNextTime_handler'), $output);
-        }
-        return get_object_vars($output);
-    }
+    // }
+    
+    // public static function GetNextTime_handler($data, $website, &$output)
+    // {
+        // if (preg_match('/<mainwp>(.*)<\/mainwp>/', $data, $results) > 0) {
+            // $result = $results[1];
+            // $information = unserialize(base64_decode($result));
+            // unset($results);
+            // unset($result);
+			// if(isset($information['error']))
+			// {
+				// $output->error = $information['error'];
+			// }
+			// else
+			// {
+					// if (is_array($information) && isset($information['next_post_date'])) {
+							// $time = strtotime($information['next_post_date']);
+							// $time_next = strtotime($output->next_post_date);
+							// if ($time > 0)
+							// {
+								// if ($time_next == 0 || $time_next > $time)
+								// {
+									// $output->next_post_date =  date('Y-m-d H:i:s', $time);
+									// $output->next_post_id = $information['next_post_id'];   ;
+									// $output->next_post_website_id = $website->id;
+									// $output->next_posts= $information['next_posts'];
+									// $output->error = NULL;
+								// }
+							// }
+					// }
+			// }
+        // }
+    // }
+
+    // public static function getNextTimeToPost($post_type_function = 'get_next_time_to_post')
+    // {
+        // $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
+        // $dbwebsites = array();
+        // while ($websites && ($website = @mysql_fetch_object($websites)))
+        // {
+            // $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
+        // }
+        // @mysql_free_result($websites);
+        // $output = new stdClass();
+        // if (count($dbwebsites) > 0)
+        // {
+            // MainWPUtility::fetchUrlsAuthed($dbwebsites, $post_type_function, '', array(MainWPPost::getClassName(), 'GetNextTime_handler'), $output);
+        // }
+        // return get_object_vars($output);
+    // }
 
     public static function addStickyOption()
     {

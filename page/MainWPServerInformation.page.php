@@ -72,6 +72,7 @@ class MainWPServerInformation
 //                            self::renderRow('PHP Memory Limit', '>=', '128M', 'getPHPMemoryLimit', '(256M+ best for big backups)');
                         self::renderRow('PCRE Backtracking Limit', '>=', '10000', 'getOutputBufferSize');
                         self::renderRow('SSL Extension Enabled', '=', true, 'getSSLSupport');
+                        self::renderRow('Curl Extension Enabled', '=', true, 'getCurlSupport');
                         ?>
                     </tbody>
                 </table>
@@ -301,6 +302,12 @@ class MainWPServerInformation
     protected static function getSSLSupport()
     {
         return extension_loaded('openssl');
+    }
+
+
+    protected static function getCurlSupport()
+    {
+        return function_exists('curl_version');
     }
 
     protected static function getPHPVersion()

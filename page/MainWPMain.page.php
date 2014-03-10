@@ -72,7 +72,7 @@ class MainWPMain
         add_meta_box($page.'-contentbox-' . $i++, MainWPRecentPages::getName(), array(MainWPRecentPages::getClassName(), 'render'), $page, 'normal', 'core');
         add_meta_box($page.'-contentbox-' . $i++, MainWPSecurityIssues::getMetaboxName(), array(MainWPSecurityIssues::getClassName(), 'renderMetabox'), $page, 'normal', 'core');
         add_meta_box($page.'-contentbox-' . $i++, MainWPBackupTasks::getName(), array(MainWPBackupTasks::getClassName(), 'render'), $page, 'normal', 'core');
-        add_meta_box($page.'-contentbox-' . $i++, MainWPSEO::getName(), array(MainWPSEO::getClassName(), 'render'), $page, 'normal', 'core');
+        if (get_option('mainwp_seo') == 1) add_meta_box($page.'-contentbox-' . $i++, MainWPSEO::getName(), array(MainWPSEO::getClassName(), 'render'), $page, 'normal', 'core');
         add_meta_box($page.'-contentbox-' . $i++, MainWPExtensionsWidget::getName(), array(MainWPExtensionsWidget::getClassName(), 'render'), $page, 'normal', 'core');
         add_meta_box($page.'-contentbox-' . $i++, MainWPHelp::getName(), array(MainWPHelp::getClassName(), 'render'), $page, 'normal', 'core');
         add_meta_box($page.'-contentbox-' . $i++, MainWPNews::getName(), array(MainWPNews::getClassName(), 'render'), $page, 'normal', 'core');
@@ -118,52 +118,7 @@ class MainWPMain
         <?php wp_nonce_field('closedpostboxes', 'closedpostboxesnonce', false); ?>
         <?php wp_nonce_field('meta-box-order', 'meta-box-order-nonce', false); ?>
         <input type="hidden" name="action" value="save_howto_testPages_general"/>
-        <?php
-        $i = 0;
-        if (is_array($websites))
-        {
-            for ($i = 0; $i < count($websites); $i++)
-            {
-                $website = $websites[$i];
-                echo '<input type="hidden" name="dashboard_wp_ids[]" class="dashboard_wp_id" value="'.$website->id.'" />';
-            }
-        }
-        else
-        {
-            while ($website = @mysql_fetch_object($websites))
-            {
-                echo '<input type="hidden" name="dashboard_wp_ids[]" class="dashboard_wp_id" value="'.$website->id.'" />';
-            }
-        }
-        ?>
         <div class="postbox" style="padding-top: 1em;">
-            <div id="refresh-status-box" title="Updating Websites" style="display: none; text-align: center">
-                <div id="refresh-status-progress"></div>
-                <span id="refresh-status-current">0</span> / <span id="refresh-status-total"><?php echo is_array($websites) ? count($websites) : mysql_num_rows($websites); ?></span> updated
-                <div style="height: 160px; overflow: auto; margin-top: 20px; margin-bottom: 10px; text-align: left" id="refresh-status-content">
-                    <table style="width: 100%">
-                    <?php
-                        if (is_array($websites))
-                        {
-                            for ($i = 0; $i < count($websites); $i++)
-                            {
-                                $website = $websites[$i];
-                               echo '<tr><td>'.MainWPUtility::getNiceURL($website->url).'</td><td style="width: 80px"><span class="refresh-status-wp" siteid="'.$website->id.'">PENDING</span></td></tr>';
-                            }
-                        }
-                        else
-                        {
-                            @mysql_data_seek($websites, 0);
-                            while ($website = @mysql_fetch_object($websites))
-                            {
-                               echo '<tr><td>'.MainWPUtility::getNiceURL($website->url).'</td><td style="width: 80px"><span class="refresh-status-wp" siteid="'.$website->id.'">PENDING</span></td></tr>';
-                            }
-                        }
-                        ?>
-                    </table>
-                </div>
-                <input id="refresh-status-close" type="button" name="Close" value="Close" class="button" />
-            </div>
             <table id="mainwp-refresh-bar" width="100%">
                 <tbody><tr>
                     <?php
@@ -195,6 +150,7 @@ class MainWPMain
                 <td id="mainwp-refresh-bar-buttons">
                 <input type="button" id="dashboard_refresh" value="<?php _e('Sync Data','mainwp'); ?>" class="button-hero button mainwp-upgrade-button" title="<?php echo MainWPRightNow::renderLastUpdate(); ?>" />
                 <a class="button-hero button-primary button mainwp-addsite-button" href="admin.php?page=managesites&do=new"><?php _e('Add New Site','mainwp'); ?></a>
+                <a class="button-hero button-primary button mainwp-button-red" target="_blank" href="http://extensions.mainwp.com"><?php _e('Get New Extensions','mainwp'); ?></a>
                 </td>
             <div id="dashboard_refresh_statusextra" style="display: none">&nbsp;&nbsp;<img src="<?php echo plugins_url('images/loader.gif', dirname(__FILE__)); ?>"/></div>
                 </tr></tbody>

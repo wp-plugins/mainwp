@@ -73,12 +73,6 @@ class MainWPManageSites_List_Table extends WP_List_Table
 
     function get_columns()
     {
-//        $columns = array(
-//            'cb' => '<input type="checkbox" />',
-//            'booktitle' => __('Title', 'mylisttable'),
-//            'author' => __('Author', 'mylisttable'),
-//            'isbn' => __('ISBN', 'mylisttable')
-//        );
         $columns = array(
             'status' => __('Status', 'mainwp'),
             'site' => __('Site', 'mainwp'),
@@ -90,20 +84,11 @@ class MainWPManageSites_List_Table extends WP_List_Table
             'seo' => __('SEO', 'mainwp'),
             'notes' => __('Notes', 'mainwp')
         );
+
+        if (get_option('mainwp_seo') != 1) unset($columns['seo']);
+
         return $columns;
     }
-
-//    function usort_reorder($a, $b)
-//    {
-//        // If no sort, default to title
-//        $orderby = (!empty($_GET['orderby'])) ? $_GET['orderby'] : 'booktitle';
-//        // If no order, default to asc
-//        $order = (!empty($_GET['order'])) ? $_GET['order'] : 'asc';
-//        // Determine sort order
-//        $result = strcmp($a[$orderby], $b[$orderby]);
-//        // Send final sort direction to usort
-//        return ($order === 'asc') ? $result : -$result;
-//    }
 
     function column_status($item)
     {
@@ -401,7 +386,6 @@ class MainWPManageSites_List_Table extends WP_List_Table
                     while ($this->items && ($item = @mysql_fetch_array($this->items)))
                     {
                         echo '<option>' . $item['name'] . '</option>';
-                        $this->single_row($item);
                     }
 
                     mysql_data_seek($this->items, 0);

@@ -123,6 +123,11 @@ class MainWPInstallBulk
      //Renders the upload sub part
     public static function renderUpload($title) {
         ?>
+        <?php if ($title == 'Plugins') { ?>
+        <div class="mainwp_info-box-red" id="mainwp-ext-notice">
+            <span><?php _e('<strong>Do Not upload extensions here</strong>, they do not go on the child sites, upload and activate them via your dashboard sites <a href="/wp-admin/plugin-install.php" style="text-decoration: none;">plugin screen.</a>','mainwp'); ?></span><span style="float: right;"><a href="#" style="text-decoration: none;" id="mainwp-ext-dismiss"><?php _e('Dismiss','mainwp'); ?></a></span>
+        </div>
+        <?php } ?>
         <h4 style="margin: 8px 0 8px;"><?php _e('Install','mainwp'); ?> <?php echo strtolower($title); ?> <?php _e('in .zip format','mainwp'); ?></h4>
         <p class="install-help"><?php _e('If you have','mainwp'); ?> <?php echo strtolower($title); ?> <?php _e('in a .zip format, you may install it by uploading it here.','mainwp'); ?></p>
         <div id="mainwp-file-uploader">

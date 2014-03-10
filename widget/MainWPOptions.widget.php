@@ -19,6 +19,7 @@ class MainWPOptions
             MainWPDB::Instance()->updateUserExtension($userExtension);
             if (MainWPUtility::isAdmin()) {
                 update_option('mainwp_optimize', (!isset($_POST['mainwp_optimize']) ? 0 : 1));
+                update_option('mainwp_seo', (!isset($_POST['mainwp_seo']) ? 0 : 1));
                 update_option('mainwp_maximumRequests', $_POST['mainwp_maximumRequests']);
                 $val = (!isset($_POST['mainwp_automaticDailyUpdate']) ? 2 : $_POST['mainwp_automaticDailyUpdate']);
                 update_option('mainwp_automaticDailyUpdate', $val);
@@ -132,6 +133,16 @@ class MainWPOptions
             <td>
                 <input type="text" name="mainwp_maximumRequests"
                        id="mainwp_maximumRequests" value="<?php echo ((get_option('mainwp_maximumRequests') == false) ? 0 : get_option('mainwp_maximumRequests')); ?>"/>
+            </td>
+        </tr>
+        <tr>
+            <th scope="row"><?php _e('Basic SEO Stats','mainwp'); ?> <?php MainWPUtility::renderToolTip(__('This requires your Dashboard to query the Google servers for this information.','mainwp')); ?></th>
+            <td>
+            	<div class="mainwp-checkbox">
+                <input type="checkbox" name="mainwp_seo"
+                       id="mainwp_seo" <?php echo ((get_option('mainwp_seo') == 1) ? 'checked="true"' : ''); ?>"/>
+                <label for="mainwp_seo"></label>
+               </div>
             </td>
         </tr>
         <?php } ?>

@@ -217,6 +217,7 @@ class MainWPSystem
         MainWPPage::init();
         MainWPThemes::init();
         MainWPPlugins::init();
+        MainWPRightNow::init();
     }
 
     function filter_fetchUrlsAuthed($pluginFile, $key, $dbwebsites, $what, $params, $handle, $output)
@@ -231,8 +232,10 @@ class MainWPSystem
 
     public function in_plugin_update_message($plugin_data, $r)
     {
-        if ($r->key_status == 'NOK') echo '<br />Your Log-in and Password are invalid, please update your login settings <a href="'.admin_url('admin.php?page=Settings').'">here</a>.';
-        else if (empty($r->package)) echo '<br />Your update license has expired, please log into <a href="http://mainwp.com/member">the members area</a> and upgrade your support and update license.';
+        if (empty($r) || !is_object($r)) return;
+
+        if (property_exists($r, 'key_status') && $r->key_status == 'NOK') echo '<br />Your Log-in and Password are invalid, please update your login settings <a href="'.admin_url('admin.php?page=Settings').'">here</a>.';
+        else if (property_exists($r, 'package') && empty($r->package)) echo '<br />Your update license has expired, please log into <a href="http://mainwp.com/member">the members area</a> and upgrade your support and update license.';
     }
 
     public function localization()
@@ -671,6 +674,29 @@ class MainWPSystem
                 $websiteLastPlugins = json_decode($website->last_plugin_upgrades, true);
                 $websitePlugins = json_decode($website->plugin_upgrades, true);
 
+                /** Check themes **/
+                $websiteLastThemes = json_decode($website->last_theme_upgrades, true);
+                $websiteThemes = json_decode($website->theme_upgrades, true);
+
+                $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
+                if (is_array($decodedPremiumUpgrades))
+                {
+                    foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                    {
+                        if ($premiumUpgrade['type'] == 'plugin')
+                        {
+                            if (!is_array($websitePlugins)) $websitePlugins = array();
+                            $websitePlugins[] = $premiumUpgrade;
+                        }
+                        else if ($premiumUpgrade['type'] == 'theme')
+                        {
+                            if (!is_array($websiteThemes)) $websiteThemes = array();
+                            $websiteThemes[] = $premiumUpgrade;
+                        }
+                    }
+                }
+
+
                 //Run over every update we had last time..
                 foreach ($websitePlugins as $pluginSlug => $pluginInfo)
                 {
@@ -706,10 +732,6 @@ class MainWPSystem
                         }
                     }
                 }
-
-                /** Check themes **/
-                $websiteLastThemes = json_decode($website->last_theme_upgrades, true);
-                $websiteThemes = json_decode($website->theme_upgrades, true);
 
                 //Run over every update we had last time..
                 foreach ($websiteThemes as $themeSlug => $themeInfo)
@@ -1180,6 +1202,8 @@ class MainWPSystem
 
     function mainwp_cronstats_action()
     {
+        if (get_option('mainwp_seo') != 1) return;
+
         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getWebsitesStatsUpdateSQL());
 
         $start = time();
@@ -1603,12 +1627,6 @@ class MainWPSystem
     //Empty footer text
     function admin_footer_text()
     {
-        return 'Currently Managing: <span id="managedSitesCount">' . MainWPDB::Instance()->getWebsitesCount() . '</span> Sites';
-    }
-
-    //Version
-    function update_footer()
-    {
         $userExtension = MainWPDB::Instance()->getUserExtension();
         if (session_id() == '') session_start();
 //        if (($userExtension->tips == 1) && isset($_SESSION['showTip'])) {
@@ -1617,7 +1635,74 @@ class MainWPSystem
         if (isset($_SESSION['showTip'])) {
             unset($_SESSION['showTip']);
         }
-        return 'MainWP - version ' . $this->current_version;
+        return 'MainWP - version ' . $this->current_version . ' &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Currently Managing: <span id="managedSitesCount">' . MainWPDB::Instance()->getWebsitesCount() . '</span> Sites';
+    }
+
+    //Version
+    function update_footer()
+    {
+        $output = '<span><input type="button" style="background-image: none!important; padding-left: .6em !important;" id="dashboard_refresh" value="Sync Data" class="mainwp-upgrade-button button-primary button" /> <a class="button-primary button" href="admin.php?page=managesites&do=new">Add New Site</a> <a class="button-primary button mainwp-button-red" href="http://extensions.mainwp.com" target="_blank">Get New Extensions</a></span>';
+
+
+        $current_wpid = MainWPUtility::get_current_wpid();
+        if ($current_wpid)
+        {
+            $website = MainWPDB::Instance()->getWebsiteById($current_wpid);
+            $websites = array($website);
+        }
+        else
+        {
+            $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser(false, null, 'wp.dtsSync DESC, wp.url ASC'));
+        }
+        ob_start();
+
+        if (is_array($websites))
+        {
+            for ($i = 0; $i < count($websites); $i++)
+            {
+                $website = $websites[$i];
+                echo '<input type="hidden" name="dashboard_wp_ids[]" class="dashboard_wp_id" value="'.$website->id.'" />';
+            }
+        }
+        else
+        {
+            while ($website = @mysql_fetch_object($websites))
+            {
+                echo '<input type="hidden" name="dashboard_wp_ids[]" class="dashboard_wp_id" value="'.$website->id.'" />';
+            }
+        }
+        ?>
+        <div id="refresh-status-box" title="Updating Websites" style="display: none; text-align: center">
+            <div id="refresh-status-progress"></div>
+            <span id="refresh-status-current">0</span> / <span id="refresh-status-total"><?php echo is_array($websites) ? count($websites) : mysql_num_rows($websites); ?></span> updated
+            <div style="height: 160px; overflow: auto; margin-top: 20px; margin-bottom: 10px; text-align: left" id="refresh-status-content">
+                <table style="width: 100%">
+                <?php
+                    if (is_array($websites))
+                    {
+                        for ($i = 0; $i < count($websites); $i++)
+                        {
+                            $website = $websites[$i];
+                           echo '<tr><td>'.MainWPUtility::getNiceURL($website->url).'</td><td style="width: 80px"><span class="refresh-status-wp" siteid="'.$website->id.'">PENDING</span></td></tr>';
+                        }
+                    }
+                    else
+                    {
+                        @mysql_data_seek($websites, 0);
+                        while ($website = @mysql_fetch_object($websites))
+                        {
+                           echo '<tr><td>'.MainWPUtility::getNiceURL($website->url).'</td><td style="width: 80px"><span class="refresh-status-wp" siteid="'.$website->id.'">PENDING</span></td></tr>';
+                        }
+                    }
+                    ?>
+                </table>
+            </div>
+            <input id="refresh-status-close" type="button" name="Close" value="Close" class="button" />
+        </div>
+    <?php
+        $newOutput = ob_get_clean();
+
+        return $output . $newOutput;
     }
 
     function new_menus()

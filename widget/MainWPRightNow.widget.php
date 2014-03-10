@@ -6,9 +6,41 @@ class MainWPRightNow
         return __CLASS__;
     }
 
-    public static function test()
+    public static function init()
     {
+        add_filter( 'plugins_api', array('MainWPRightNow', 'plugins_api'), 10, 3);
+    }
 
+    public static function plugins_api($default, $action, $args)
+    {
+        $url = $http_url = 'http://api.wordpress.org/plugins/info/1.0/';
+        if ( $ssl = wp_http_supports( array( 'ssl' ) ) )
+            $url = set_url_scheme( $url, 'https' );
+
+        $args = array(
+            'timeout' => 15,
+            'body' => array(
+                'action' => $action,
+                'request' => serialize( $args )
+            )
+        );
+        $request = wp_remote_post( $url, $args );
+
+        if ( is_wp_error( $request ) )
+        {
+            $url = '';
+            $name = '';
+            if (isset($_REQUEST['url']))
+            {
+                $url = $_REQUEST['url'];
+                $name = $_REQUEST['name'];
+            }
+
+            $res = new WP_Error('plugins_api_failed', __( '<h3>No Plugin Information Found.</h3> This may be a premium plugin and no other details are available from WordPress.', 'mainwp') . ' ' . ($url == '' ? __('Please visit the Plugin website for more information.', 'mainwp' ) : __('Please visit the Plugin website for more information: ', 'mainwp' ) . '<a href="'.rawurldecode($url).'" target="_blank">'.rawurldecode($name).'</a>'), $request->get_error_message() );
+            return $res;
+        }
+
+        return $default;
     }
 
     public static function getName()
@@ -230,6 +262,23 @@ class MainWPRightNow
                     {
                         $decodedPluginUpgrades = json_decode($website->plugin_upgrades, true);
                         $decodedThemeUpgrades = json_decode($website->theme_upgrades, true);
+                        $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
+                        if (is_array($decodedPremiumUpgrades))
+                        {
+                            foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                            {
+                                if ($premiumUpgrade['type'] == 'plugin')
+                                {
+                                    if (!is_array($decodedPluginUpgrades)) $decodedPluginUpgrades = array();
+                                    $decodedPluginUpgrades[] = $premiumUpgrade;
+                                }
+                                else if ($premiumUpgrade['type'] == 'theme')
+                                {
+                                    if (!is_array($decodedThemeUpgrades)) $decodedThemeUpgrades = array();
+                                    $decodedThemeUpgrades[] = $premiumUpgrade;
+                                }
+                            }
+                        }
                         foreach ($information['upgrades'] as $k => $v) {
                             $tmp[urlencode($k)] = $v;
                             if ($v == 1)
@@ -390,6 +439,27 @@ class MainWPRightNow
             if (is_array($wp_upgrades) && count($wp_upgrades) > 0) $total_wp_upgrades++;
 
             $plugin_upgrades = json_decode($website->plugin_upgrades, true);
+            $theme_upgrades = json_decode($website->theme_upgrades, true);
+            $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
+            if (is_array($decodedPremiumUpgrades))
+            {
+                foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                {
+                    $premiumUpgrade['premium'] = true;
+
+                    if ($premiumUpgrade['type'] == 'plugin')
+                    {
+                        if (!is_array($plugin_upgrades)) $plugin_upgrades = array();
+                        $plugin_upgrades[] = $premiumUpgrade;
+                    }
+                    else if ($premiumUpgrade['type'] == 'theme')
+                    {
+                        if (!is_array($theme_upgrades)) $theme_upgrades = array();
+                        $theme_upgrades[] = $premiumUpgrade;
+                    }
+                }
+            }
+
             if (is_array($plugin_upgrades))
             {
                 $ignored_plugins = json_decode($website->ignored_plugins, true);
@@ -405,7 +475,6 @@ class MainWPRightNow
                 $total_plugin_upgrades += count($plugin_upgrades);
             }
 
-            $theme_upgrades = json_decode($website->theme_upgrades, true);
             if (is_array($theme_upgrades))
             {
                 $ignored_themes = json_decode($website->ignored_themes, true);
@@ -427,19 +496,19 @@ class MainWPRightNow
                         if (!isset($allPlugins[$slug])) $allPlugins[$slug] = 1;
                         else $allPlugins[$slug]++;
 
-                        $pluginsInfo[$slug] = array('name' => $plugin_upgrade['Name'], 'slug' => $plugin_upgrade['update']['slug']);
+                        $pluginsInfo[$slug] = array('name' => $plugin_upgrade['Name'], 'slug' => $plugin_upgrade['update']['slug'], 'premium' => (isset($plugin_upgrade['premium']) ? $plugin_upgrade['premium'] : 0));
                     }
                 }
                 ksort($allPlugins);
 
-                if (is_array($plugin_upgrades))
+                if (is_array($theme_upgrades))
                 {
                     foreach ($theme_upgrades as $slug => $theme_upgrade)
                     {
                         if (!isset($allThemes[$slug])) $allThemes[$slug] = 1;
                         else $allThemes[$slug]++;
 
-                        $themesInfo[$slug] = array('name' => $theme_upgrade['Name']);
+                        $themesInfo[$slug] = array('name' => $theme_upgrade['Name'], 'premium' => (isset($theme_upgrade['premium']) ? $theme_upgrade['premium'] : 0));
                     }
                 }
                 ksort($allThemes);
@@ -554,6 +623,20 @@ class MainWPRightNow
                 while ($websites && ($website = @mysql_fetch_object($websites)))
                 {
                     $plugin_upgrades = json_decode($website->plugin_upgrades, true);
+                    $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
+                    if (is_array($decodedPremiumUpgrades))
+                    {
+                        foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                        {
+                            $premiumUpgrade['premium'] = true;
+
+                            if ($premiumUpgrade['type'] == 'plugin')
+                            {
+                                if (!is_array($plugin_upgrades)) $plugin_upgrades = array();
+                                $plugin_upgrades[] = $premiumUpgrade;
+                            }
+                        }
+                    }
 
                     $ignored_plugins = json_decode($website->ignored_plugins, true);
                     if (is_array($ignored_plugins)) {
@@ -596,9 +679,9 @@ class MainWPRightNow
                     {
                         $plugin_name = urlencode($plugin_name);
                         ?>
-                        <div class="mainwp-row" plugin_slug="<?php echo $plugin_name; ?>" updated="0">
+                        <div class="mainwp-row" plugin_slug="<?php echo $plugin_name; ?>" premium="<?php echo (isset($plugin_upgrade['premium']) ? $plugin_upgrade['premium'] : 0) ? 1 : 0; ?>" updated="0">
                                 <span class="mainwp-left-col">
-                                    <?php if ($globalView) { ?>&nbsp;&nbsp;&nbsp;<?php } ?><a href="<?php echo admin_url() . 'plugin-install.php?tab=plugin-information&plugin='.$plugin_upgrade['update']['slug'].'&TB_iframe=true&width=640&height=477'; ?>" target="_blank"
+                                    <?php if ($globalView) { ?>&nbsp;&nbsp;&nbsp;<?php } ?><a href="<?php echo admin_url() . 'plugin-install.php?tab=plugin-information&plugin='.$plugin_upgrade['update']['slug'].'&url=' . (isset($plugin_upgrade['PluginURI']) ? rawurlencode($plugin_upgrade['PluginURI']) : '') . '&name='.rawurlencode($plugin_upgrade['Name']).'&TB_iframe=true&width=640&height=477'; ?>" target="_blank"
                                                                                         class="thickbox" title="More information about <?php echo $plugin_upgrade['Name']; ?>"><?php echo $plugin_upgrade['Name']; ?></a><input type="hidden" id="wp_upgraded_plugin_<?php echo $website->id; ?>_<?php echo $plugin_name; ?>" value="0"/></span>
                                 <span class="mainwp-mid-col pluginsInfo" id="wp_upgrade_plugin_<?php echo $website->id; ?>_<?php echo $plugin_name; ?>"><?php echo $plugin_upgrade['Version']; ?> to <?php echo $plugin_upgrade['update']['new_version']; ?></span>
                                 <span class="mainwp-right-col pluginsAction"><div id="wp_upgradebuttons_plugin_<?php echo $website->id; ?>_<?php echo $plugin_name; ?>"><a href="#" onClick="return rightnow_plugins_ignore_detail('<?php echo $plugin_name; ?>', '<?php echo urlencode($plugin_upgrade['Name']); ?>', <?php echo $website->id; ?>)" class="button"><?php _e('Ignore','mainwp'); ?></a> &nbsp; <a href="#" class="mainwp-upgrade-button button" onClick="return rightnow_upgrade_plugin(<?php echo $website->id; ?>, '<?php echo $plugin_name; ?>')"><?php _e('Upgrade','mainwp'); ?></a></div></span>
@@ -619,7 +702,7 @@ class MainWPRightNow
                     ?>
                     <div class="mainwp-row">
                         <span class="mainwp-left-col">
-                            <a href="<?php echo admin_url() . 'plugin-install.php?tab=plugin-information&plugin='.$pluginsInfo[$slug]['slug'].'&TB_iframe=true&width=640&height=477'; ?>" target="_blank"
+                            <a href="<?php echo admin_url() . 'plugin-install.php?tab=plugin-information&plugin='.$pluginsInfo[$slug]['slug'].'&url=' . (isset($plugin_upgrade['PluginURI']) ? rawurlencode($plugin_upgrade['PluginURI']) : '') . '&name='.rawurlencode($plugin_upgrade['Name']).'&TB_iframe=true&width=640&height=477'; ?>" target="_blank"
                                                                                                                         class="thickbox" title="More information about <?php echo $pluginsInfo[$slug]['name']; ?>">
                                 <?php echo $pluginsInfo[$slug]['name']; ?>
                             </a>
@@ -636,12 +719,26 @@ class MainWPRightNow
                     <?php
                     }
                     ?>
-                    <div plugin_slug="<?php echo $plugin_name; ?>" plugin_name="<?php echo urlencode($pluginsInfo[$slug]['name']); ?>" <?php if ($globalView) { ?>style="display: none"<?php } ?>>
+                    <div plugin_slug="<?php echo $plugin_name; ?>" plugin_name="<?php echo urlencode($pluginsInfo[$slug]['name']); ?>" premium="<?php echo $pluginsInfo[$slug]['premium'] ? 1 : 0; ?>" <?php if ($globalView) { ?>style="display: none"<?php } ?>>
                         <?php
                         @mysql_data_seek($websites, 0);
                         while ($websites && ($website = @mysql_fetch_object($websites)))
                         {
                             $plugin_upgrades = json_decode($website->plugin_upgrades, true);
+                            $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
+                            if (is_array($decodedPremiumUpgrades))
+                            {
+                                foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                                {
+                                    $premiumUpgrade['premium'] = true;
+
+                                    if ($premiumUpgrade['type'] == 'plugin')
+                                    {
+                                        if (!is_array($plugin_upgrades)) $plugin_upgrades = array();
+                                        $plugin_upgrades[] = $premiumUpgrade;
+                                    }
+                                }
+                            }
 
                             $ignored_plugins = json_decode($website->ignored_plugins, true);
                             if (is_array($ignored_plugins)) {
@@ -696,6 +793,20 @@ class MainWPRightNow
                 while ($websites && ($website = @mysql_fetch_object($websites)))
                 {
                     $theme_upgrades = json_decode($website->theme_upgrades, true);
+                    $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
+                    if (is_array($decodedPremiumUpgrades))
+                    {
+                        foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                        {
+                            $premiumUpgrade['premium'] = true;
+
+                            if ($premiumUpgrade['type'] == 'theme')
+                            {
+                                if (!is_array($theme_upgrades)) $theme_upgrades = array();
+                                $theme_upgrades[] = $premiumUpgrade;
+                            }
+                        }
+                    }
 
                     $ignored_themes = json_decode($website->ignored_themes, true);
                     if (is_array($ignored_themes)) $theme_upgrades = array_diff_key($theme_upgrades, $ignored_themes);
@@ -733,7 +844,7 @@ class MainWPRightNow
                     {
                         $theme_name = urlencode($theme_name);
                         ?>
-                        <div class="mainwp-row" theme_slug="<?php echo $theme_name; ?>"  theme_name="<?php echo urlencode($themesInfo[$slug]['name']); ?>" updated="0">
+                        <div class="mainwp-row" theme_slug="<?php echo $theme_name; ?>"  theme_name="<?php echo urlencode($themesInfo[$slug]['name']); ?>" premium="<?php echo $themesInfo[$slug]['premium'] ? 1 : 0; ?>" updated="0">
                             <span class="mainwp-left-col"><?php if ($globalView) { ?>&nbsp;&nbsp;&nbsp;<?php } ?><?php echo $theme_upgrade['Name']; ?><input type="hidden" id="wp_upgraded_theme_<?php echo $website->id; ?>_<?php echo $theme_name; ?>" value="0"/></span>
                             <span class="mainwp-mid-col pluginsInfo" id="wp_upgrade_theme_<?php echo $website->id; ?>_<?php echo $theme_name; ?>"><?php echo $theme_upgrade['Version']; ?> to <?php echo $theme_upgrade['update']['new_version']; ?></span>
                             <span class="mainwp-right-col pluginsAction"><div id="wp_upgradebuttons_theme_<?php echo $website->id; ?>_<?php echo $theme_name; ?>"><a href="#" class="button" onClick="return rightnow_themes_ignore_detail('<?php echo $theme_name; ?>', '<?php echo urlencode($theme_upgrade['Name']); ?>', <?php echo $website->id; ?>)"><?php _e('Ignore','mainwp'); ?></a> &nbsp; <a href="#" class="mainwp-upgrade-button button" onClick="rightnow_upgrade_theme(<?php echo $website->id; ?>, '<?php echo $theme_name; ?>')"><?php _e('Upgrade','mainwp'); ?></a> </div></span>
@@ -767,12 +878,26 @@ class MainWPRightNow
                     <?php
                     }
                     ?>
-                    <div theme_slug="<?php echo $theme_name; ?>"  theme_name="<?php echo urlencode($themesInfo[$slug]['name']); ?>" <?php if ($globalView) { ?>style="display: none"<?php } ?>>
+                    <div theme_slug="<?php echo $theme_name; ?>"  theme_name="<?php echo urlencode($themesInfo[$slug]['name']); ?>" premium="<?php echo $themesInfo[$slug]['premium'] ? 1 : 0; ?>" <?php if ($globalView) { ?>style="display: none"<?php } ?>>
                         <?php
                         @mysql_data_seek($websites, 0);
                         while ($websites && ($website = @mysql_fetch_object($websites)))
                         {
                             $theme_upgrades = json_decode($website->theme_upgrades, true);
+                            $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
+                            if (is_array($decodedPremiumUpgrades))
+                            {
+                                foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                                {
+                                    $premiumUpgrade['premium'] = true;
+
+                                    if ($premiumUpgrade['type'] == 'theme')
+                                    {
+                                        if (!is_array($theme_upgrades)) $theme_upgrades = array();
+                                        $theme_upgrades[] = $premiumUpgrade;
+                                    }
+                                }
+                            }
 
                             $ignored_themes = json_decode($website->ignored_themes, true);
                             if (is_array($ignored_themes)) {

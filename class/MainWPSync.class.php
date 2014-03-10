@@ -17,6 +17,7 @@ class MainWPSync
             'wp_upgrades' => $emptyArray,
             'plugin_upgrades' => $emptyArray,
             'theme_upgrades' => $emptyArray,
+            'premium_upgrades' => $emptyArray,
             'uptodate' => 0,
             'securityIssues' => $emptyArray,
             'recent_comments' => $emptyArray,
@@ -113,6 +114,7 @@ class MainWPSync
             'wp_upgrades' => $emptyArray,
             'plugin_upgrades' => $emptyArray,
             'theme_upgrades' => $emptyArray,
+            'premium_upgrades' => $emptyArray,
             'uptodate' => 0,
             'securityIssues' => $emptyArray,
             'recent_comments' => $emptyArray,
@@ -156,6 +158,12 @@ class MainWPSync
         if (isset($information['theme_updates']))
         {
             $websiteValues['theme_upgrades'] = json_encode($information['theme_updates']);
+            $done = true;
+        }
+
+        if (isset($information['premium_updates']))
+        {
+            $websiteValues['premium_upgrades'] = json_encode($information['premium_updates']);
             $done = true;
         }
 
