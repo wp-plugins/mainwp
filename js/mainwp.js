@@ -2143,7 +2143,7 @@ mainwp_managesites_add = function (event) {
             if (response == 'HTTPERROR') {
                 errors.push('HTTP error - website does not exist');
             } else if (response == 'NOMAINWP') {
-                errors.push(__('No MainWP plugin detected, first install and activate the plugin and add your site to MainWP afterwards. Click <a href="%1" target="_blank">here</a> to install <a href="%2" target="_blank">MainWP</a> plugin (do not forget to activate it after installation).', url + 'wp-admin/plugin-install.php?tab=search&type=term&s=mainwp&plugin-search-input=Search+Plugins', url + 'wp-admin/plugin-install.php?tab=search&type=term&s=mainwp&plugin-search-input=Search+Plugins'));
+                errors.push(__('No MainWP Child Plugin detected, first install and activate the plugin and add your site to MainWP Dashboard afterwards. Click <a href="%1" target="_blank">here</a> to install <a href="%2" target="_blank">MainWP</a> plugin (do not forget to activate it after installation).', url + 'wp-admin/plugin-install.php?tab=search&type=term&s=mainwp&plugin-search-input=Search+Plugins', url + 'wp-admin/plugin-install.php?tab=search&type=term&s=mainwp&plugin-search-input=Search+Plugins'));
             } else if (response.substr(0, 5) == 'ERROR') {
                 if (response.length == 5) {
                     errors.push(__('Undefined error.'));
@@ -2291,7 +2291,7 @@ managesites_remove = function (id) {
 
     var q = confirm(__('Are you sure you want to delete this site?'));
     if (q) {
-        jQuery('#site-status-' + id).html(__('Removing and deactivating the MainWP plugin..'));
+        jQuery('#site-status-' + id).html(__('Removing and deactivating the MainWP Child plugin..'));
         var data = mainwp_secure_data({
             action:'mainwp_removesite',
             id:id
@@ -2306,12 +2306,12 @@ managesites_remove = function (id) {
                 error = response.error;
             }
             else if (response.result == 'SUCCESS') {
-                result = __('The site has been removed and the MainWP plugin has been disabled');
+                result = __('The site has been removed and the MainWP Child plugin has been disabled');
             } else if (response.result == 'NOSITE') {
                 error = __('The requested site has not been found');
             }
             else {
-                result = __('The site has been removed but the MainWP plugin could not be disabled');
+                result = __('The site has been removed but the MainWP Child plugin could not be disabled');
             }
 
             if (error != '') {
@@ -2478,7 +2478,7 @@ mainwp_managesites_import_sites = function () {
             if (response == 'HTTPERROR') {                
                 errors.push(check_result + __('HTTP error - website does not exist'));
             } else if (response == 'NOMAINWP') {
-                errors.push(check_result + __('No MainWP plugin detected, first install and activate the plugin and add your site to MainWP afterwards. Click <a href="%1" target="_blank">here</a> to install <a href="%2" target="_blank">MainWP</a> plugin (do not forget to activate it after installation)', url + 'wp-admin/plugin-install.php?tab=search&type=term&s=mainwp&plugin-search-input=Search+Plugins', url + 'wp-admin/plugin-install.php?tab=search&type=term&s=mainwp&plugin-search-input=Search+Plugins'));
+                errors.push(check_result + __('No MainWP Child plugin detected, first install and activate the plugin and add your site to MainWP afterwards. Click <a href="%1" target="_blank">here</a> to install <a href="%2" target="_blank">MainWP</a> plugin (do not forget to activate it after installation)', url + 'wp-admin/plugin-install.php?tab=search&type=term&s=mainwp&plugin-search-input=Search+Plugins', url + 'wp-admin/plugin-install.php?tab=search&type=term&s=mainwp&plugin-search-input=Search+Plugins'));
             } else if (response.substr(0, 5) == 'ERROR') {
                 if (response.length == 5) {
                     errors.push(check_result + __('Undefined error.'));
@@ -5202,11 +5202,11 @@ getErrorMessage = function(pError)
         var error = '';
         if (pError.extra)
         {
-            error = __('No MainWP plugin detected, first install and activate the plugin and add your site to MainWP afterwards. If you continue experiencing this issue please  test your connection <a href="admin.php?page=managesites&do=test&site=%1">here</a> or post as much information as possible on the error in the <a href="http://mainwp.com/forum/">support forum</a>.', encodeURIComponent(pError.extra));
+            error = __('No MainWP Child plugin detected, first install and activate the plugin and add your site to MainWP afterwards. If you continue experiencing this issue please  test your connection <a href="admin.php?page=managesites&do=test&site=%1">here</a> or post as much information as possible on the error in the <a href="http://mainwp.com/forum/">support forum</a>.', encodeURIComponent(pError.extra));
         }
         else
         {
-            error = __('No MainWP plugin detected, first install and activate the plugin and add your site to MainWP afterwards. If you continue experiencing this issue please post as much information as possible on the error in the <a href="http://mainwp.com/forum/">support forum</a>.');
+            error = __('No MainWP Child plugin detected, first install and activate the plugin and add your site to MainWP afterwards. If you continue experiencing this issue please post as much information as possible on the error in the <a href="http://mainwp.com/forum/">support forum</a>.');
         }
 
         return error;

@@ -6,7 +6,7 @@ Author URI: http://mainwp.com
 Plugin URI: http://mainwp.com
 Requires at least: 3.4
 Tested up to: 3.8
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -108,13 +108,12 @@ Sure we have a quick FAQ with a lot more questions and answers [here](http://mai
 
 == Changelog ==
 
+= 1.0.4 =
+* Fix for premium plugins
+
 = 1.0.3 =
 * Added possibility to disable basic SEO stats
-* Codex Issue Fixed for displaying header and footer
 * Added support for premium plugins
-* Extended server information with CURL requirement
-* Added Sync, Add Sites and Extension to the plugin footer for easy access
-
 
 = 1.0.2 =
 * Fixed issue with adding new posts/pages

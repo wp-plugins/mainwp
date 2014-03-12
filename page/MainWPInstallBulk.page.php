@@ -368,7 +368,7 @@ class MainWPInstallBulk
                 }
                 $output->errors[$website->id] = array($website->name, $error);
             } else {
-                $output->errors[$website->id] = array($website->name, __('Undefined error - please reinstall the MainWP plugin on the client','mainwp'));
+                $output->errors[$website->id] = array($website->name, __('Undefined error - please reinstall the MainWP Child plugin on the client','mainwp'));
             }
         } else {
             $output->errors[$website->id] = array($website->name, 'Error installing.');

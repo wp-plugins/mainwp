@@ -265,17 +265,17 @@ class MainWPRightNow
                         $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
                         if (is_array($decodedPremiumUpgrades))
                         {
-                            foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                            foreach ($decodedPremiumUpgrades as $crrSlug => $premiumUpgrade)
                             {
                                 if ($premiumUpgrade['type'] == 'plugin')
                                 {
                                     if (!is_array($decodedPluginUpgrades)) $decodedPluginUpgrades = array();
-                                    $decodedPluginUpgrades[] = $premiumUpgrade;
+                                    $decodedPluginUpgrades[$crrSlug] = $premiumUpgrade;
                                 }
                                 else if ($premiumUpgrade['type'] == 'theme')
                                 {
                                     if (!is_array($decodedThemeUpgrades)) $decodedThemeUpgrades = array();
-                                    $decodedThemeUpgrades[] = $premiumUpgrade;
+                                    $decodedThemeUpgrades[$crrSlug] = $premiumUpgrade;
                                 }
                             }
                         }
@@ -443,19 +443,19 @@ class MainWPRightNow
             $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
             if (is_array($decodedPremiumUpgrades))
             {
-                foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                foreach ($decodedPremiumUpgrades as $crrSlug => $premiumUpgrade)
                 {
                     $premiumUpgrade['premium'] = true;
 
                     if ($premiumUpgrade['type'] == 'plugin')
                     {
                         if (!is_array($plugin_upgrades)) $plugin_upgrades = array();
-                        $plugin_upgrades[] = $premiumUpgrade;
+                        $plugin_upgrades[$crrSlug] = $premiumUpgrade;
                     }
                     else if ($premiumUpgrade['type'] == 'theme')
                     {
                         if (!is_array($theme_upgrades)) $theme_upgrades = array();
-                        $theme_upgrades[] = $premiumUpgrade;
+                        $theme_upgrades[$crrSlug] = $premiumUpgrade;
                     }
                 }
             }
@@ -626,14 +626,14 @@ class MainWPRightNow
                     $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
                     if (is_array($decodedPremiumUpgrades))
                     {
-                        foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                        foreach ($decodedPremiumUpgrades as $crrSlug => $premiumUpgrade)
                         {
                             $premiumUpgrade['premium'] = true;
 
                             if ($premiumUpgrade['type'] == 'plugin')
                             {
                                 if (!is_array($plugin_upgrades)) $plugin_upgrades = array();
-                                $plugin_upgrades[] = $premiumUpgrade;
+                                $plugin_upgrades[$crrSlug] = $premiumUpgrade;
                             }
                         }
                     }
@@ -728,14 +728,14 @@ class MainWPRightNow
                             $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
                             if (is_array($decodedPremiumUpgrades))
                             {
-                                foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                                foreach ($decodedPremiumUpgrades as $crrSlug => $premiumUpgrade)
                                 {
                                     $premiumUpgrade['premium'] = true;
 
                                     if ($premiumUpgrade['type'] == 'plugin')
                                     {
                                         if (!is_array($plugin_upgrades)) $plugin_upgrades = array();
-                                        $plugin_upgrades[] = $premiumUpgrade;
+                                        $plugin_upgrades[$crrSlug] = $premiumUpgrade;
                                     }
                                 }
                             }
@@ -796,14 +796,14 @@ class MainWPRightNow
                     $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
                     if (is_array($decodedPremiumUpgrades))
                     {
-                        foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                        foreach ($decodedPremiumUpgrades as $crrSlug => $premiumUpgrade)
                         {
                             $premiumUpgrade['premium'] = true;
 
                             if ($premiumUpgrade['type'] == 'theme')
                             {
                                 if (!is_array($theme_upgrades)) $theme_upgrades = array();
-                                $theme_upgrades[] = $premiumUpgrade;
+                                $theme_upgrades[$crrSlug] = $premiumUpgrade;
                             }
                         }
                     }
@@ -887,14 +887,14 @@ class MainWPRightNow
                             $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
                             if (is_array($decodedPremiumUpgrades))
                             {
-                                foreach ($decodedPremiumUpgrades as $premiumUpgrade)
+                                foreach ($decodedPremiumUpgrades as $crrSlug => $premiumUpgrade)
                                 {
                                     $premiumUpgrade['premium'] = true;
 
                                     if ($premiumUpgrade['type'] == 'theme')
                                     {
                                         if (!is_array($theme_upgrades)) $theme_upgrades = array();
-                                        $theme_upgrades[] = $premiumUpgrade;
+                                        $theme_upgrades[$crrSlug] = $premiumUpgrade;
                                     }
                                 }
                             }

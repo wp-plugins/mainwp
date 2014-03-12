@@ -265,7 +265,7 @@ class MainWPSync
             else
             {
                 $error = true;
-                $websiteValues['sync_errors'] = __('Undefined error - please reinstall the MainWP plugin on the client', 'mainwp');
+                $websiteValues['sync_errors'] = __('Undefined error - please reinstall the MainWP Child Plugin on the client site', 'mainwp');
             }
         }
 

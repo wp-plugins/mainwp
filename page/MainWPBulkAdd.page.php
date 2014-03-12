@@ -23,7 +23,7 @@ class MainWPBulkAdd
             } else if (isset($information['error'])) {
                 $output->errors[$website->id] = __('Error - ','mainwp') . $information['error'];
             } else {
-                $output->errors[$website->id] = __('Undefined error - please reinstall the MainWP plugin on the client','mainwp');
+                $output->errors[$website->id] = __('Undefined error - please reinstall the MainWP Child plugin on the client','mainwp');
             }
         } else {
             $output->errors[$website->id] = MainWPErrorHelper::getErrorMessage(new MainWPException('NOMAINWP', $website->url));

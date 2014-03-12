@@ -359,6 +359,13 @@ class MainWPManageSitesView
               {
                   ?>
                   <h3><?php _e('SEO Details','mainwp'); ?> (Last Updated <?php echo MainWPUtility::formatTimestamp(MainWPUtility::getTimestamp($website->statsUpdate)); ?>)</h3>
+                  <?php
+                  if (get_option('mainwp_seo') == 0 ) {
+                    ?>
+                    <div class="mainwp_info-box-red"><?php _e('Basic SEO turned Off. <strong>Historic Information Only</strong>. You can turn back on in the <a href="admin.php?page=Settings">Settings page</a>.','mainwp'); ?></div>
+                    <?php
+                  }
+                  ?>
                   <table>
                       <tr>
                           <th style="text-align: left; width: 180px;">Alexa Rank:</th>
@@ -937,7 +944,7 @@ class MainWPManageSitesView
                 }
                 else if ($e->getMessage() == 'NOMAINWP')
                 {
-                    $error = __('No MainWP plugin detected, first install and activate the plugin and add your site to MainWP afterwards. If you continue experiencing this issue please ','mainwp');
+                    $error = __('No MainWP Child plugin detected, first install and activate the plugin and add your site to MainWP afterwards. If you continue experiencing this issue please ','mainwp');
                     if ($e->getMessageExtra() != null) $error .= __('test your connection <a href="' . admin_url('admin.php?page=managesites&do=test&site=' . urlencode($e->getMessageExtra())) . '">here</a> or ','mainwp');
                     $error .= __('post as much information as possible on the error in the <a href="http://mainwp.com/forum/">support forum</a>.','mainwp');
 
@@ -1065,7 +1072,7 @@ class MainWPManageSitesView
                 }
                 else if ($e->getMessage() == 'NOMAINWP')
                 {
-                    $error = __('No MainWP plugin detected, first install and activate the plugin and add your site to MainWP afterwards. If you continue experiencing this issue please ','mainwp');
+                    $error = __('No MainWP Child plugin detected, first install and activate the plugin and add your site to MainWP afterwards. If you continue experiencing this issue please ','mainwp');
                     if ($e->getMessageExtra() != null) $error .= __('test your connection <a href="' . admin_url('admin.php?page=managesites&do=test&site=' . urlencode($e->getMessageExtra())) . '">here</a> or ','mainwp');
                     $error .= __('post as much information as possible on the error in the <a href="http://mainwp.com/forum/">support forum</a>.','mainwp');
                 }
