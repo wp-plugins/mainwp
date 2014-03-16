@@ -113,7 +113,11 @@ Sure we have a quick FAQ with a lot more questions and answers [here](http://mai
 
 = 1.0.3 =
 * Added possibility to disable basic SEO stats
+* Codex Issue Fixed for displaying header and footer
 * Added support for premium plugins
+* Extended server information with CURL requirement
+* Added Sync, Add Sites and Extension to the plugin footer for easy access
+
 
 = 1.0.2 =
 * Fixed issue with adding new posts/pages
