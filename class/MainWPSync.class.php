@@ -75,7 +75,7 @@ class MainWPSync
             $information = MainWPUtility::fetchUrlAuthed($pWebsite, 'stats',
                 array(
                     'optimize' => ((get_option("mainwp_optimize") == 1) ? 1 : 0),
-                    'heatMap' => $userExtension->heatMap,
+                    'heatMap' => (MainWPExtensions::isExtensionAvailable('mainwp-heatmap-extension') ? $userExtension->heatMap : 0),
                     'pluginDir' => $pluginDir,
                     'cloneSites' => (!$cloneEnabled ? 0 : urlencode(json_encode($cloneSites))),
                     'pluginConflicts' => json_encode($pluginConflicts),

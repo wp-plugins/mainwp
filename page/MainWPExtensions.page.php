@@ -215,6 +215,31 @@ class MainWPExtensions
         self::renderFooter('');
     }
 
+    public static function isExtensionAvailable($api)
+    {
+        $ext_extensions = get_option('mainwp_extensions');
+        if (isset($ext_extensions))
+        {
+            $snEnabledExtensions = get_option('mainwp_extloaded');
+            if (!is_array($snEnabledExtensions)) $snEnabledExtensions = array();
+
+            foreach($ext_extensions as $extension)
+            {
+                if (isset($extension['mainwp']) && ($extension['mainwp'] == true))
+                {
+                    if (isset($extension['api']) && ($extension['api'] == $api))
+                    {
+                        $slug = plugin_basename($extension['plugin']);
+
+                        return in_array($slug, $snEnabledExtensions);
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+	
     public static function isExtensionEnabled($pluginFile)
     {
         $slug = plugin_basename($pluginFile);
