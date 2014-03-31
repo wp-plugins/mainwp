@@ -65,7 +65,7 @@ class MainWPOfflineChecks
             </thead>
             <tbody id="the-list">
             <?php
-            while ($websites && ($website = @mysql_fetch_object($websites)))
+            while ($websites && ($website = @MainWPDB::fetch_object($websites)))
             {
                 ?>
                 <tr>
@@ -131,11 +131,11 @@ class MainWPOfflineChecks
         }
 
         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             MainWPDB::Instance()->updateWebsiteOfflineCheckSetting($website->id, $_POST['offline_check']);
         }
-        @mysql_free_result($websites);
+        @MainWPDB::free_result($websites);
 
         return '1';
     }
@@ -164,7 +164,7 @@ class MainWPOfflineChecks
             $emailOutput = null;
         }
         $errors = false;
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             if (self::performCheck($website, true, $emailOutput))
                 $output[$website->id] = 1;
@@ -174,7 +174,7 @@ class MainWPOfflineChecks
                 $errors = true;
             }
         }
-        @mysql_free_result($websites);
+        @MainWPDB::free_result($websites);
         if ($emailOutput != null)
         {
             if ($errors)

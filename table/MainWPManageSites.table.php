@@ -170,7 +170,7 @@ class MainWPManageSites_List_Table extends WP_List_Table
             'open' => sprintf('<a href="admin.php?page=SiteOpen&websiteid=%1$s">' . __('Open WP Admin', 'mainwp') . '</a> (<a href="admin.php?page=SiteOpen&newWindow=yes&websiteid=%1$s" target="_blank">' . __('New Window', 'mainwp') . '</a>)', $item['id']),
             'test' => '<a href="#" class="mainwp_site_testconnection">' . __('Test Connection', 'mainwp') . '</a> <span style="display: none;"><img src="' . plugins_url('images/loading.gif', dirname(__FILE__)) . '""/>' . __('Testing Connection', 'mainwp') . '</span>'
         );
-
+        $actions = apply_filters('mainwp_managesites_column_url', $actions, $item['id']); 
         return sprintf('<strong><a target="_blank" href="%1$s">%1$s</a></strong>%2$s', $item['url'], $this->row_actions($actions));
     }
 
@@ -315,26 +315,26 @@ class MainWPManageSites_List_Table extends WP_List_Table
         if (isset($_REQUEST['g']) && ($_REQUEST['g'] != ''))
         {
             $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($_REQUEST['g'], true));
-            $totalRecords = ($websites ? mysql_num_rows($websites) : 0);
+            $totalRecords = ($websites ? MainWPDB::num_rows($websites) : 0);
 
-            if ($websites) @mysql_free_result($websites);
+            if ($websites) @MainWPDB::free_result($websites);
             if (isset($_GET['orderby']) && ($_GET['orderby'] == 'group')) $orderby = 'wp.url';
             $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($_REQUEST['g'], true, $orderby, (($currentPage - 1) * $perPage), $perPage, $where));
         }
         else if (isset($_REQUEST['status']) && ($_REQUEST['status'] != ''))
         {
             $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser(true, null, $orderby, false, false, $where));
-            $totalRecords = ($websites ? mysql_num_rows($websites) : 0);
+            $totalRecords = ($websites ? MainWPDB::num_rows($websites) : 0);
 
-            if ($websites) @mysql_free_result($websites);
+            if ($websites) @MainWPDB::free_result($websites);
             $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser(true,  null, $orderby, (($currentPage - 1) * $perPage), $perPage, $where));
         }
         else
         {
             $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser(true, (isset($_REQUEST['s']) && ($_REQUEST['s'] != '') ? $_REQUEST['s'] : null), $orderby));
-            $totalRecords = ($websites ? mysql_num_rows($websites) : 0);
+            $totalRecords = ($websites ? MainWPDB::num_rows($websites) : 0);
 
-            if ($websites) @mysql_free_result($websites);
+            if ($websites) @MainWPDB::free_result($websites);
             $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser(true, (isset($_REQUEST['s']) && ($_REQUEST['s'] != '') ? $_REQUEST['s'] : null), $orderby, (($currentPage - 1) * $perPage), $perPage));
         }
 
@@ -347,14 +347,14 @@ class MainWPManageSites_List_Table extends WP_List_Table
 
     function clear_items()
     {
-        if (is_resource($this->items)) @mysql_free_result($this->items);
+        if (MainWPDB::is_result($this->items)) @MainWPDB::free_result($this->items);
     }
 
     function display_rows()
     {
-        if (is_resource($this->items))
+        if (MainWPDB::is_result($this->items))
         {
-            while ($this->items && ($item = @mysql_fetch_array($this->items)))
+            while ($this->items && ($item = @MainWPDB::fetch_array($this->items)))
             {
                 $this->single_row( $item );
             }
@@ -381,14 +381,14 @@ class MainWPManageSites_List_Table extends WP_List_Table
                    autocompletelist="sites" name="s" class="mainwp_autocomplete"/>
             <datalist id="sites">
                 <?php
-                if (is_resource($this->items))
+                if (MainWPDB::is_result($this->items))
                 {
-                    while ($this->items && ($item = @mysql_fetch_array($this->items)))
+                    while ($this->items && ($item = @MainWPDB::fetch_array($this->items)))
                     {
                         echo '<option>' . $item['name'] . '</option>';
                     }
 
-                    mysql_data_seek($this->items, 0);
+                    MainWPDB::data_seek($this->items, 0);
                 }
                 ?>
             </datalist>

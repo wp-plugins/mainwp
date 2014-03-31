@@ -35,13 +35,13 @@ class MainWPUI
             }
             else
             {
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $selected = ($selected_websites == 'all' || in_array($website->id, $selected_websites));
 
                     echo '<div class="mainwp_selected_sites_item '.($selected ? 'selected_sites_item_checked' : '').'"><input onClick="mainwp_site_select(this)" type="'.$type.'" name="' . ( $type == 'radio' ? 'selected_site' : 'selected_sites[]' ) . '" siteid="' . $website->id . '" value="' . $website->id . '" id="selected_sites_' . $website->id . '" '.($selected ? 'checked="true"' : '').'/> <label for="selected_sites_' . $website->id . '">' . $website->name . '<span class="url">' . $website->url . '</span>' . '</label></div>';
                 }
-                @mysql_free_result($websites);
+                @MainWPDB::free_result($websites);
             }
             ?>
         </div>
@@ -102,7 +102,7 @@ class MainWPUI
                                 }
                                 else
                                 {
-                                    while ($websites && ($website = @mysql_fetch_object($websites)))
+                                    while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                                             {
                                                 $cats = isset($selected_cats[$website->id]) && is_array($selected_cats[$website->id]) ? $selected_cats[$website->id] : array();
                                         ?>
@@ -137,7 +137,7 @@ class MainWPUI
                                          </div>
                                             <?php
                                             }
-                                    @mysql_free_result($websites);
+                                    @MainWPDB::free_result($websites);
                                 }
                                           ?>
                         </div>

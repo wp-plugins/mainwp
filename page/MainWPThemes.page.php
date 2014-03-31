@@ -175,7 +175,7 @@ class MainWPThemes
                 foreach ($groups as $k => $v) {
                     if (MainWPUtility::ctype_digit($v)) {
                         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($v));
-                        while ($websites && ($website = @mysql_fetch_object($websites)))
+                        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                         {
                             $allThemes = json_decode($website->themes, true);
                             for ($i = 0; $i < count($allThemes); $i++) {
@@ -188,7 +188,7 @@ class MainWPThemes
                                 $output->themes[] = $theme;
                             }
                         }
-                        @mysql_free_result($websites);
+                        @MainWPDB::free_result($websites);
                     }
                 }
             }
@@ -212,11 +212,11 @@ class MainWPThemes
                 foreach ($groups as $k => $v) {
                     if (MainWPUtility::ctype_digit($v)) {
                         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($v));
-                        while ($websites && ($website = @mysql_fetch_object($websites)))
+                        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                         {
                             $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
                         }
-                        @mysql_free_result($websites);
+                        @MainWPDB::free_result($websites);
                     }
                 }
             }
@@ -348,7 +348,7 @@ class MainWPThemes
                 //Build websites array
                 //Search in local cache
                 $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $allThemes = json_decode($website->themes, true);
                     for ($i = 0; $i < count($allThemes); $i++) {
@@ -360,7 +360,7 @@ class MainWPThemes
                         $output->themes[] = $theme;
                     }
                 }
-                @mysql_free_result($websites);
+                @MainWPDB::free_result($websites);
             }
             else
             {
@@ -368,11 +368,11 @@ class MainWPThemes
                 //Build websites array
                 $dbwebsites = array();
                 $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
                 }
-                @mysql_free_result($websites);
+                @MainWPDB::free_result($websites);
 
                 $post_data = array(
                     'keyword' => '',
@@ -594,8 +594,9 @@ class MainWPThemes
             die('FAIL');
         }
 
+        if (!isset($information['out']) || !isset($information['status']) || ($information['status'] != 'SUCCESS')) die('FAIL');
+
         die($information['out']);
-        if (!isset($information['status']) || ($information['status'] != 'SUCCESS')) die('FAIL');
     }
 
     //@see MainWPInstallBulk
@@ -759,7 +760,7 @@ class MainWPThemes
         $ignoredThemeConflicts  = (is_array($decodedIgnoredThemeConflicts) && (count($decodedIgnoredThemeConflicts) > 0));
 
         $cnt = 0;
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             $tmpDecodedIgnoredThemeConflicts = json_decode($website->ignored_themeConflicts, true);
             if (!is_array($tmpDecodedIgnoredThemeConflicts) || count($tmpDecodedIgnoredThemeConflicts) == 0) continue;
@@ -820,8 +821,8 @@ class MainWPThemes
             <?php
             if ($cnt > 0)
             {
-                @mysql_data_seek($websites, 0);
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                @MainWPDB::data_seek($websites, 0);
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $decodedIgnoredThemeConflicts = json_decode($website->ignored_themeConflicts, true);
                     if (!is_array($decodedIgnoredThemeConflicts) || count($decodedIgnoredThemeConflicts) == 0) continue;
@@ -846,7 +847,7 @@ class MainWPThemes
                         <?php
                     }
                 }
-                @mysql_free_result($websites);
+                @MainWPDB::free_result($websites);
             }
             else
             {
@@ -869,7 +870,7 @@ class MainWPThemes
         $ignoredThemes = (is_array($decodedIgnoredThemes) && (count($decodedIgnoredThemes) > 0));
 
         $cnt = 0;
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             $tmpDecodedIgnoredThemes = json_decode($website->ignored_themes, true);
             if (!is_array($tmpDecodedIgnoredThemes) || count($tmpDecodedIgnoredThemes) == 0) continue;
@@ -932,8 +933,8 @@ class MainWPThemes
         <?php
         if ($cnt > 0)
         {
-            @mysql_data_seek($websites, 0);
-            while ($websites && ($website = @mysql_fetch_object($websites)))
+            @MainWPDB::data_seek($websites, 0);
+            while ($websites && ($website = @MainWPDB::fetch_object($websites)))
             {
                $decodedIgnoredThemes = json_decode($website->ignored_themes, true);
                if (!is_array($decodedIgnoredThemes) || count($decodedIgnoredThemes) == 0) continue;
@@ -957,7 +958,7 @@ class MainWPThemes
                  <?php
                }
             }
-            @mysql_free_result($websites);
+            @MainWPDB::free_result($websites);
         }
         else
         {

@@ -300,11 +300,11 @@ class MainWPPost
             foreach ($groups as $k => $v) {
                 if (MainWPUtility::ctype_digit($v)) {
                     $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($v));
-                    while ($websites && ($website = @mysql_fetch_object($websites)))
+                    while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                     {
                         $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
                     }
-                    @mysql_free_result($websites);
+                    @MainWPDB::free_result($websites);
                 }
             }
         }
@@ -616,11 +616,11 @@ class MainWPPost
                     foreach ($selected_groups as $k) {
                         if (MainWPUtility::ctype_digit($k)) {
                             $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($k));
-                            while ($websites && ($website = @mysql_fetch_object($websites)))
+                            while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                             {
                                 $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
                             }
-                            @mysql_free_result($websites);
+                            @MainWPDB::free_result($websites);
                         }
                     }
                 }
@@ -977,11 +977,11 @@ class MainWPPost
     // {
         // $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
         // $dbwebsites = array();
-        // while ($websites && ($website = @mysql_fetch_object($websites)))
+        // while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         // {
             // $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
         // }
-        // @mysql_free_result($websites);
+        // @MainWPDB::free_result($websites);
         // $output = new stdClass();
         // if (count($dbwebsites) > 0)
         // {

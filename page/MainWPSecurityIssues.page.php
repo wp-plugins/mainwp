@@ -143,8 +143,8 @@ class MainWPSecurityIssues
 
         $total_securityIssues = 0;
 
-        @mysql_data_seek($websites, 0);
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+        @MainWPDB::data_seek($websites, 0);
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             if (MainWPUtility::ctype_digit($website->securityIssues)) $total_securityIssues += $website->securityIssues;
         }
@@ -160,8 +160,8 @@ class MainWPSecurityIssues
             </div>
             <div id="wp_securityissues" style="display: none">
                 <?php
-                @mysql_data_seek($websites, 0);
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                @MainWPDB::data_seek($websites, 0);
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     if (!MainWPUtility::ctype_digit($website->securityIssues) || $website->securityIssues == 0) continue;
                 ?>

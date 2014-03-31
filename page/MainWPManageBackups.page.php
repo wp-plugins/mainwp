@@ -457,7 +457,7 @@ class MainWPManageBackups
             }
         }
 
-        $task = MainWPDB::Instance()->addBackupTask($current_user->ID, $name, $schedule, $type, $excludedFolder, $sites, $groups, $_POST['subfolder'], $_POST['filename']);
+        $task = MainWPDB::Instance()->addBackupTask($current_user->ID, $name, $schedule, $type, $excludedFolder, $sites, $groups, (isset($_POST['subfolder']) ? $_POST['subfolder'] : ''), $_POST['filename']);
         if (!$task)
         {
             die(json_encode(array('error' => 'An unspecified error occured.')));

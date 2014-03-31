@@ -42,7 +42,7 @@ class MainWPRecentPages
         $allPages = array();
         if ($websites)
         {
-            while ($websites && ($website = @mysql_fetch_object($websites)))
+            while ($websites && ($website = @MainWPDB::fetch_object($websites)))
             {
                 if ($website->recent_pages == '') continue;
 
@@ -54,7 +54,7 @@ class MainWPRecentPages
                     $allPages[] = $page;
                 }
             }
-            @mysql_free_result($websites);
+            @MainWPDB::free_result($websites);
         }
 
             $recent_pages_published = MainWPUtility::getSubArrayHaving($allPages, 'status', 'publish');

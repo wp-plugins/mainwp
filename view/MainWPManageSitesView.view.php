@@ -63,9 +63,11 @@ class MainWPManageSitesView
             {
                 foreach ($subPages as $subPage)
                 {
+                    if ($shownPage === $subPage['slug'] || !isset($subPage['menu_hidden']) || (isset($subPage['menu_hidden']) && $subPage['menu_hidden'] != true)) {
                 ?>
                     <a class="nav-tab pos-nav-tab <?php if ($shownPage === $subPage['slug']) { echo "nav-tab-active"; } ?>" href="admin.php?page=ManageSites<?php echo $subPage['slug']; ?>"><?php echo $subPage['title']; ?></a>
                 <?php
+                    }
                 }
             }
             ?>
@@ -103,11 +105,11 @@ class MainWPManageSitesView
                             <datalist id="mainwp-test-sites">
                                <?php
                                 $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
-                                while ($websites && ($website = @mysql_fetch_object($websites)))
+                                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                                 {
                                     echo '<option>'.$website->url.'</option>';
                                 }
-                                @mysql_free_result($websites);
+                                @MainWPDB::free_result($websites);
                                ?>
                             </datalist>
                         </td>

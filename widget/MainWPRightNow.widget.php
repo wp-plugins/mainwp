@@ -135,7 +135,7 @@ class MainWPRightNow
             if ($id == '_ALL_')
             {
                 $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     if ($type == 'plugin')
                     {
@@ -146,7 +146,7 @@ class MainWPRightNow
                         MainWPDB::Instance()->updateWebsiteValues($website->id, array('ignored_themes' => json_encode(array())));
                     }
                 }
-                @mysql_free_result($websites);
+                @MainWPDB::free_result($websites);
             }
             else if (MainWPUtility::ctype_digit($id))
             {
@@ -429,9 +429,11 @@ class MainWPRightNow
         $allThemes = array();
         $themesInfo = array();
 
-        @mysql_data_seek($websites, 0);
+        @MainWPDB::data_seek($websites, 0);
+
         $currentSite = null;
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             if (!$globalView) $currentSite = $website;
 
@@ -545,7 +547,6 @@ class MainWPRightNow
 
             if ($isConflict) $total_conflict++;
         }
-
         $errorsDismissed = get_user_option('mainwp_syncerrors_dismissed');
         ?>
     <div class="clear">
@@ -571,8 +572,8 @@ class MainWPRightNow
         </div>
         <div id="wp_upgrades" style="display: none">
             <?php
-            @mysql_data_seek($websites, 0);
-            while ($websites && ($website = @mysql_fetch_object($websites)))
+            @MainWPDB::data_seek($websites, 0);
+            while ($websites && ($website = @MainWPDB::fetch_object($websites)))
             {
                 $wp_upgrades = json_decode($website->wp_upgrades, true);
 
@@ -619,8 +620,8 @@ class MainWPRightNow
             <?php
             if ($userExtension->site_view == 1)
             {
-                @mysql_data_seek($websites, 0);
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                @MainWPDB::data_seek($websites, 0);
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $plugin_upgrades = json_decode($website->plugin_upgrades, true);
                     $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
@@ -721,8 +722,8 @@ class MainWPRightNow
                     ?>
                     <div plugin_slug="<?php echo $plugin_name; ?>" plugin_name="<?php echo urlencode($pluginsInfo[$slug]['name']); ?>" premium="<?php echo $pluginsInfo[$slug]['premium'] ? 1 : 0; ?>" <?php if ($globalView) { ?>style="display: none"<?php } ?>>
                         <?php
-                        @mysql_data_seek($websites, 0);
-                        while ($websites && ($website = @mysql_fetch_object($websites)))
+                        @MainWPDB::data_seek($websites, 0);
+                        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                         {
                             $plugin_upgrades = json_decode($website->plugin_upgrades, true);
                             $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
@@ -789,8 +790,8 @@ class MainWPRightNow
             <?php
             if ($userExtension->site_view == 1)
             {
-                @mysql_data_seek($websites, 0);
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                @MainWPDB::data_seek($websites, 0);
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $theme_upgrades = json_decode($website->theme_upgrades, true);
                     $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
@@ -880,8 +881,8 @@ class MainWPRightNow
                     ?>
                     <div theme_slug="<?php echo $theme_name; ?>"  theme_name="<?php echo urlencode($themesInfo[$slug]['name']); ?>" premium="<?php echo $themesInfo[$slug]['premium'] ? 1 : 0; ?>" <?php if ($globalView) { ?>style="display: none"<?php } ?>>
                         <?php
-                        @mysql_data_seek($websites, 0);
-                        while ($websites && ($website = @mysql_fetch_object($websites)))
+                        @MainWPDB::data_seek($websites, 0);
+                        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                         {
                             $theme_upgrades = json_decode($website->theme_upgrades, true);
                             $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
@@ -950,8 +951,8 @@ class MainWPRightNow
             </div>
             <div id="wp_errors" style="display: none">
                 <?php
-                @mysql_data_seek($websites, 0);
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                @MainWPDB::data_seek($websites, 0);
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     if ($website->sync_errors == '') continue;
                 ?>
@@ -978,8 +979,8 @@ class MainWPRightNow
             </div>
             <div id="wp_uptodate" style="display: none">
                 <?php
-                @mysql_data_seek($websites, 0);
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                @MainWPDB::data_seek($websites, 0);
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     if ($website->uptodate != 1) continue;
                 ?>
@@ -1011,8 +1012,8 @@ class MainWPRightNow
 
                 for ($j = 0; $j <= 3; $j++)
                 {
-                    @mysql_data_seek($websites, 0);
-                    while ($websites && ($website = @mysql_fetch_object($websites)))
+                    @MainWPDB::data_seek($websites, 0);
+                    while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                     {
                         $pluginConflicts = json_decode($website->pluginConflicts, true);
                         $themeConflicts = json_decode($website->themeConflicts, true);
@@ -1119,7 +1120,7 @@ class MainWPRightNow
     </div>
 
     <?php
-        @mysql_free_result($websites);
+        @MainWPDB::free_result($websites);
     }
 
     public static function renderIgnoredUpdates()

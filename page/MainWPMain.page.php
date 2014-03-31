@@ -104,7 +104,7 @@ class MainWPMain
         <?php
         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser(false, null, 'wp.dtsSync DESC, wp.url ASC'));
         self::renderDashboardBody($websites, $this->dashBoard, $screen_layout_columns);
-        @mysql_free_result($websites);
+        @MainWPDB::free_result($websites);
         ?>
     </div>
     <?php

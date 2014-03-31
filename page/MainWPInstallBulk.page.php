@@ -246,11 +246,11 @@ class MainWPInstallBulk
                 if (MainWPUtility::ctype_digit($groupid))
                 {
                     $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($groupid));
-                    while ($websites && ($website = @mysql_fetch_object($websites)))
+                    while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                     {
                         $output['sites'][$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name'));
                     }
-                    @mysql_free_result($websites);
+                    @MainWPDB::free_result($websites);
                 }
             }
         }
@@ -298,11 +298,11 @@ class MainWPInstallBulk
                 $groupid = $enc_id;
                 if (MainWPUtility::ctype_digit($groupid)) {
                     $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($groupid));
-                    while ($websites && ($website = @mysql_fetch_object($websites)))
+                    while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                     {
                         $output['sites'][$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name'));
                     }
-                    @mysql_free_result($websites);
+                    @MainWPDB::free_result($websites);
                 }
             }
         }

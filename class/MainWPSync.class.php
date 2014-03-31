@@ -46,7 +46,7 @@ class MainWPSync
                 $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
                 if ($websites)
                 {
-                    while ($websites && ($website = @mysql_fetch_object($websites)))
+                    while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                     {
                         if (in_array($website->id, $disallowedCloneSites)) continue;
                         if ($website->id == $pWebsite->id) continue;
@@ -56,7 +56,7 @@ class MainWPSync
                             'extauth' => $website->extauth,
                             'size' => $website->totalsize);
                     }
-                    @mysql_free_result($websites);
+                    @MainWPDB::free_result($websites);
                 }
             }
 

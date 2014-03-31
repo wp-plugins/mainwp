@@ -155,7 +155,7 @@ class MainWPPlugins
                 //Build websites array
                 //Search in local cache
                 $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $allPlugins = json_decode($website->plugins, true);
                     for ($i = 0; $i < count($allPlugins); $i++)
@@ -168,7 +168,7 @@ class MainWPPlugins
                         $output->plugins[] = $plugin;
                     }
                 }
-                @mysql_free_result($websites);
+                @MainWPDB::free_result($websites);
             }
             else
             {
@@ -176,11 +176,11 @@ class MainWPPlugins
                 //Build websites array
                 $dbwebsites = array();
                 $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
                 }
-                @mysql_free_result($websites);
+                @MainWPDB::free_result($websites);
 
                 $post_data = array(
                     'keyword' => '',
@@ -385,7 +385,7 @@ class MainWPPlugins
                 foreach ($groups as $k => $v) {
                     if (MainWPUtility::ctype_digit($v)) {
                         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($v));
-                        while ($websites && ($website = @mysql_fetch_object($websites)))
+                        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                         {
                             $allPlugins = json_decode($website->plugins, true);
                             for ($i = 0; $i < count($allPlugins); $i++) {
@@ -398,7 +398,7 @@ class MainWPPlugins
                                 $output->plugins[] = $plugin;
                             }
                         }
-                        @mysql_free_result($websites);
+                        @MainWPDB::free_result($websites);
                     }
                 }
             }
@@ -421,11 +421,11 @@ class MainWPPlugins
                 foreach ($groups as $k => $v) {
                     if (MainWPUtility::ctype_digit($v)) {
                         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($v));
-                        while ($websites && ($website = @mysql_fetch_object($websites)))
+                        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                         {
                             $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
                         }
-                        @mysql_free_result($websites);
+                        @MainWPDB::free_result($websites);
                     }
                 }
             }
@@ -816,7 +816,7 @@ class MainWPPlugins
                 $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsiteById($siteid));
             }
 
-            while ($websites && ($website = @mysql_fetch_object($websites)))
+            while ($websites && ($website = @MainWPDB::fetch_object($websites)))
             {
                 if (MainWPUtility::can_edit_website($website))
                 {
@@ -853,7 +853,7 @@ class MainWPPlugins
                     }
                 }
             }
-            @mysql_free_result($websites);
+            @MainWPDB::free_result($websites);
         }
         else
         {
@@ -912,7 +912,7 @@ class MainWPPlugins
         $ignoredPluginConflicts  = (is_array($decodedIgnoredPluginConflicts) && (count($decodedIgnoredPluginConflicts) > 0));
 
         $cnt = 0;
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             $tmpDecodedIgnoredPluginConflicts = json_decode($website->ignored_pluginConflicts, true);
             if (!is_array($tmpDecodedIgnoredPluginConflicts) || count($tmpDecodedIgnoredPluginConflicts) == 0) continue;
@@ -973,8 +973,8 @@ class MainWPPlugins
             <?php
             if ($cnt > 0)
             {
-                @mysql_data_seek($websites, 0);
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                @MainWPDB::data_seek($websites, 0);
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $decodedIgnoredPluginConflicts = json_decode($website->ignored_pluginConflicts, true);
                     if (!is_array($decodedIgnoredPluginConflicts) || count($decodedIgnoredPluginConflicts) == 0) continue;
@@ -999,7 +999,7 @@ class MainWPPlugins
                         <?php
                     }
                 }
-                @mysql_free_result($websites);
+                @MainWPDB::free_result($websites);
             }
             else
             {
@@ -1023,7 +1023,7 @@ class MainWPPlugins
         $ignoredPlugins  = (is_array($decodedIgnoredPlugins) && (count($decodedIgnoredPlugins) > 0));
 
         $cnt = 0;
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             $tmpDecodedIgnoredPlugins = json_decode($website->ignored_plugins, true);
             if (!is_array($tmpDecodedIgnoredPlugins) || count($tmpDecodedIgnoredPlugins) == 0) continue;
@@ -1084,8 +1084,8 @@ class MainWPPlugins
             <?php
             if ($cnt > 0)
             {
-                @mysql_data_seek($websites, 0);
-                while ($websites && ($website = @mysql_fetch_object($websites)))
+                @MainWPDB::data_seek($websites, 0);
+                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
                     $decodedIgnoredPlugins = json_decode($website->ignored_plugins, true);
                     if (!is_array($decodedIgnoredPlugins) || count($decodedIgnoredPlugins) == 0) continue;
@@ -1110,7 +1110,7 @@ class MainWPPlugins
                         <?php
                     }
                 }
-                @mysql_free_result($websites);
+                @MainWPDB::free_result($websites);
             }
             else
             {

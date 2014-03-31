@@ -42,7 +42,7 @@ class MainWPRecentPosts
         $allPosts = array();
         if ($websites)
         {
-            while ($websites && ($website = @mysql_fetch_object($websites)))
+            while ($websites && ($website = @MainWPDB::fetch_object($websites)))
             {
                 if ($website->recent_posts == '') continue;
 
@@ -54,7 +54,7 @@ class MainWPRecentPosts
                     $allPosts[] = $post;
                 }
             }
-            @mysql_free_result($websites);
+            @MainWPDB::free_result($websites);
         }
 
             $recent_posts_published = MainWPUtility::getSubArrayHaving($allPosts, 'status', 'publish');

@@ -20,7 +20,7 @@ class MainWPDB
 
         /** @var $wpdb wpdb */
         global $wpdb;
-        if (!@mysql_ping($wpdb->dbh))
+        if (!@self::ping($wpdb->dbh))
         {
             MainWPLogger::Instance()->info('Trying to reconnect Wordpress DB Connection');
             $wpdb->db_connect();
@@ -759,7 +759,6 @@ class MainWPDB
 
         if (MainWPUtility::ctype_digit($websiteid)) {
             $nr = $wpdb->query('DELETE FROM ' . $this->tableName('wp') . ' WHERE id=' . $websiteid);
-            $wpdb->query('DELETE FROM ' . $this->tableName('wp_ga') . ' WHERE wpid=' . $websiteid);
             $wpdb->query('DELETE FROM ' . $this->tableName('wp_group') . ' WHERE wpid=' . $websiteid);
             return $nr;
         }
@@ -1283,9 +1282,9 @@ class MainWPDB
 
         /** @var $wpdb wpdb */
         global $wpdb;
-        $result = @mysql_query($sql, $wpdb->dbh);
+        $result = @self::_query($sql, $wpdb->dbh);
 
-        if (!$result || (@mysql_num_rows($result) == 0)) return false;
+        if (!$result || (@MainWPDB::num_rows($result) == 0)) return false;
         return $result;
     }
 
@@ -1296,6 +1295,112 @@ class MainWPDB
 
         if (function_exists('esc_sql')) return esc_sql($data);
         else return $wpdb->escape($data);
+    }
+
+    //Support old & new versions of wordpress (3.9+)
+    public static function use_mysqli()
+    {
+        /** @var $wpdb wpdb */
+        if (!function_exists( 'mysqli_connect' ) ) return false;
+
+        global $wpdb;
+        return ($wpdb->dbh instanceof mysqli);
+    }
+
+    public static function ping($link)
+    {
+        if (self::use_mysqli())
+        {
+            return mysqli_ping($link);
+        }
+        else
+        {
+            return mysql_ping($link);
+        }
+    }
+
+    public static function _query($query, $link)
+    {
+        if (self::use_mysqli())
+        {
+            return mysqli_query($link, $query);
+        }
+        else
+        {
+            return mysql_query($query, $link);
+        }
+    }
+
+    public static function fetch_object($result)
+    {
+        if (self::use_mysqli())
+        {
+            return mysqli_fetch_object($result);
+        }
+        else
+        {
+            return mysql_fetch_object($result);
+        }
+    }
+
+    public static function free_result($result)
+    {
+        if (self::use_mysqli())
+        {
+            return mysqli_free_result($result);
+        }
+        else
+        {
+            return mysql_free_result($result);
+        }
+    }
+
+    public static function data_seek($result, $offset)
+    {
+        if (self::use_mysqli())
+        {
+            return mysqli_data_seek($result, $offset);
+        }
+        else
+        {
+            return mysql_data_seek($result, $offset);
+        }
+    }
+
+    public static function fetch_array($result, $result_type = null)
+    {
+        if (self::use_mysqli())
+        {
+            return mysqli_fetch_array($result, ($result_type == null ? MYSQLI_BOTH : $result_type));
+        }
+        else
+        {
+            return mysql_fetch_array($result, ($result_type == null ? MYSQL_BOTH : $result_type));
+        }
+    }
+
+    public static function num_rows($result)
+    {
+        if (self::use_mysqli())
+        {
+            return mysqli_num_rows($result);
+        }
+        else
+        {
+            return mysql_num_rows($result);
+        }
+    }
+
+    public static function is_result($result)
+    {
+        if (self::use_mysqli())
+        {
+            return ($result instanceof mysqli_result);
+        }
+        else
+        {
+            return is_resource($result);
+        }
     }
 }
 

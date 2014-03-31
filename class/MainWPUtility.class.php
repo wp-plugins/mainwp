@@ -502,6 +502,10 @@ class MainWPUtility
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($ch, CURLOPT_USERAGENT, $agent);
+        if ((ini_get('max_execution_time') != 0) && (ini_get('max_execution_time') < 300))
+        {
+            curl_setopt($ch, CURLOPT_TIMEOUT, 300);
+        }
         $data = curl_exec($ch);
         $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $err = curl_error($ch);

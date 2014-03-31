@@ -284,13 +284,13 @@ class MainWPManageGroups
     {
         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
 
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             ?>
             <li><input type="checkbox" name="sites" value="<?php echo $website->id; ?>" id="<?php echo MainWPUtility::getNiceURL($website->url); ?>" class="mainwp-checkbox2"><label for="<?php echo MainWPUtility::getNiceURL($website->url); ?>" class="mainwp-label2"><span class="website_url" style="display: none;"><?php echo MainWPUtility::getNiceURL($website->url); ?></span><span class="website_name"><?php echo $website->name; ?></span></label></li>
             <?php
         }
-        @mysql_free_result($websites);
+        @MainWPDB::free_result($websites);
     }
 
     public static function renameGroup()

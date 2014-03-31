@@ -73,6 +73,7 @@ class MainWPServerInformation
                         self::renderRow('PCRE Backtracking Limit', '>=', '10000', 'getOutputBufferSize');
                         self::renderRow('SSL Extension Enabled', '=', true, 'getSSLSupport');
                         self::renderRow('Curl Extension Enabled', '=', true, 'getCurlSupport');
+                        self::renderRow('Curl Timeout', '>=', '300', 'getCurlTimeout', 'seconds', '=', '0');
                         ?>
                     </tbody>
                 </table>
@@ -186,11 +187,11 @@ class MainWPServerInformation
 
         echo 'Child Site: <select name="" id="mainwp_serverInformation_child"><option value="-1">-- Select site</option>';
 
-        while ($websites && ($website = @mysql_fetch_object($websites)))
+        while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             echo '<option value="'.$website->id.'">' . $website->name . '</option>';
         }
-        @mysql_free_result($websites);
+        @MainWPDB::free_result($websites);
 
 
         echo '</select><br /><br /><div id="mainwp_serverInformation_child_loading"><img src="' . plugins_url('images/loader.gif', dirname(__FILE__)) . '"/> ' . __('Loading server information..', 'mainwp') . '</div><div id="mainwp_serverInformation_child_resp"></div>';
@@ -304,10 +305,14 @@ class MainWPServerInformation
         return extension_loaded('openssl');
     }
 
-
     protected static function getCurlSupport()
     {
         return function_exists('curl_version');
+    }
+
+    protected static function getCurlTimeout()
+    {
+        return ini_get('default_socket_timeout');
     }
 
     protected static function getPHPVersion()
