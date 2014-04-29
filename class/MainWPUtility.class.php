@@ -506,9 +506,9 @@ class MainWPUtility
 
             //Check the delays
             //In MS
-            $minimumDelay = ((get_option('mainwp_minimumDelay') == false) ? 200 : get_option('mainwp_minimumDelay'));
+            $minimumDelay = ((get_option('mainwp_minimumDelay') === false) ? 200 : get_option('mainwp_minimumDelay'));
             if ($minimumDelay > 0) $minimumDelay = $minimumDelay / 1000;
-            $minimumIPDelay = ((get_option('mainwp_minimumIPDelay') == false) ? 1000 : get_option('mainwp_minimumIPDelay'));
+            $minimumIPDelay = ((get_option('mainwp_minimumIPDelay') === false) ? 1000 : get_option('mainwp_minimumIPDelay'));
             if ($minimumIPDelay > 0) $minimumIPDelay = $minimumIPDelay / 1000;
 
             MainWPUtility::endSession();
@@ -555,8 +555,8 @@ class MainWPUtility
             }
 
             //Check the simultaneous requests
-            $maximumRequests = ((get_option('mainwp_maximumRequests') == false) ? 4 : get_option('mainwp_maximumRequests'));
-            $maximumIPRequests = ((get_option('mainwp_maximumIPRequests') == false) ? 1 : get_option('mainwp_maximumIPRequests'));
+            $maximumRequests = ((get_option('mainwp_maximumRequests') === false) ? 4 : get_option('mainwp_maximumRequests'));
+            $maximumIPRequests = ((get_option('mainwp_maximumIPRequests') === false) ? 1 : get_option('mainwp_maximumIPRequests'));
 
             $first = true;
             $delay = true;
@@ -683,7 +683,7 @@ class MainWPUtility
 
         $fp = fopen($file, 'w');
         $agent= 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)';
-        $ch = curl_init($url);
+        $ch = curl_init(str_replace(' ', '%20', $url));
         curl_setopt($ch, CURLOPT_FILE, $fp);
         curl_setopt($ch, CURLOPT_USERAGENT, $agent);
         curl_exec($ch);
