@@ -69,7 +69,7 @@ class MainWPSystem
             include_once(ABSPATH . 'wp-admin' . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'plugin.php'); //Version information from wordpress
             $pluginData = get_plugin_data($mainwp_plugin_file);
             $this->current_version = $pluginData['Version'];
-            update_option('mainwp_plugin_version', $this->current_version);
+            MainWPUtility::update_option('mainwp_plugin_version', $this->current_version);
         }
 
         if ((get_option("mainwp_upgradeVersionInfo") != "") && (get_option("mainwp_upgradeVersionInfo") != null)) {
@@ -235,7 +235,7 @@ class MainWPSystem
         add_filter('mainwp-activated-sub-check', array(&$this, 'activated_sub_check'));
         add_filter('mainwp-extension-enabled-check', array(MainWPExtensions::getClassName(), 'isExtensionEnabled'));
         add_filter('mainwp-getsites', array(MainWPExtensions::getClassName(), 'hookGetSites'), 10, 3);
-        add_filter('mainwp-getdbsites', array(MainWPExtensions::getClassName(), 'hookGetDBSites'), 10, 4);
+        add_filter('mainwp-getdbsites', array(MainWPExtensions::getClassName(), 'hookGetDBSites'), 10, 5);
         add_filter('mainwp-getgroups', array(MainWPExtensions::getClassName(), 'hookGetGroups'), 10, 3);
         add_action('mainwp_fetchurlsauthed', array(&$this, 'filter_fetchUrlsAuthed'), 10, 7);
         add_filter('mainwp_fetchurlauthed', array(&$this, 'filter_fetchUrlAuthed'), 10, 5);
@@ -351,7 +351,7 @@ class MainWPSystem
 
         $this->upgradeVersionInfo->result = $result;
         $this->upgradeVersionInfo->updated = time();
-        update_option("mainwp_upgradeVersionInfo", serialize($this->upgradeVersionInfo));
+        MainWPUtility::update_option("mainwp_upgradeVersionInfo", serialize($this->upgradeVersionInfo));
     }
 
     public function pre_check_update_custom($transient)
@@ -412,7 +412,7 @@ class MainWPSystem
 
     function mainwp_cronofflinecheck_action()
     {
-        update_option('mainwp_cron_last_offlinecheck', time());
+        MainWPUtility::update_option('mainwp_cron_last_offlinecheck', time());
         //Do cronjobs!
         //Config this in crontab: 0 0 * * * wget -q http://mainwp.com/wp-admin/?do=checkSites -O /dev/null 2>&1
         //this will execute once every day to check if websites are offline
@@ -436,7 +436,7 @@ class MainWPSystem
 
     function mainwp_cronupdatescheck_action()
     {
-        update_option('mainwp_cron_last_updatescheck', time());
+        MainWPUtility::update_option('mainwp_cron_last_updatescheck', time());
 
         $mainwpAutomaticDailyUpdate = get_option('mainwp_automaticDailyUpdate');
 
@@ -562,31 +562,31 @@ class MainWPSystem
                     $mail .= '</ul>';
                 }
 
-                update_option('mainwp_automaticUpdate_backupChecks', '');
+                MainWPUtility::update_option('mainwp_automaticUpdate_backupChecks', '');
 
-                update_option('mainwp_updatescheck_mail_update_core_new', '');
-                update_option('mainwp_updatescheck_mail_update_plugins_new', '');
-                update_option('mainwp_updatescheck_mail_update_themes_new', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_core_new', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_plugins_new', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_themes_new', '');
 
-                update_option('mainwp_updatescheck_mail_update_core', '');
-                update_option('mainwp_updatescheck_mail_update_plugins', '');
-                update_option('mainwp_updatescheck_mail_update_themes', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_core', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_plugins', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_themes', '');
 
-                update_option('mainwp_updatescheck_mail_ignore_core', '');
-                update_option('mainwp_updatescheck_mail_ignore_plugins', '');
-                update_option('mainwp_updatescheck_mail_ignore_themes', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_core', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_plugins', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_themes', '');
 
-                update_option('mainwp_updatescheck_mail_ignore_core_new', '');
-                update_option('mainwp_updatescheck_mail_ignore_plugins_new', '');
-                update_option('mainwp_updatescheck_mail_ignore_themes_new', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_core_new', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_plugins_new', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_themes_new', '');
 
-                update_option('mainwp_updatescheck_mail_pluginconflicts', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_pluginconflicts', '');
 
-                update_option('mainwp_updatescheck_mail_themeconflicts', '');
+                MainWPUtility::update_option('mainwp_updatescheck_mail_themeconflicts', '');
 
                 if (!$sendMail) return;
 
-                update_option('mainwp_updatescheck_last', date('d/m/Y'));
+                MainWPUtility::update_option('mainwp_updatescheck_last', date('d/m/Y'));
 
                 if ($mainwpAutomaticDailyUpdate !== false && $mainwpAutomaticDailyUpdate != 0)
                 {
@@ -857,94 +857,94 @@ class MainWPSystem
 
                 $user = get_userdata($website->userid);
                 $email = MainWPUtility::getNotificationEmail($user);
-                update_option('mainwp_updatescheck_mail_email', $email);
+                MainWPUtility::update_option('mainwp_updatescheck_mail_email', $email);
                 MainWPDB::Instance()->updateWebsiteValues($website->id, $websiteValues);
             }
 
             if (count($coreNewUpdate) != 0)
             {
                 $coreNewUpdateSaved = get_option('mainwp_updatescheck_mail_update_core_new');
-                update_option('mainwp_updatescheck_mail_update_core_new', MainWPUtility::array_merge($coreNewUpdateSaved, $coreNewUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_core_new', MainWPUtility::array_merge($coreNewUpdateSaved, $coreNewUpdate));
             }
 
             if (count($pluginsNewUpdate) != 0)
             {
                 $pluginsNewUpdateSaved = get_option('mainwp_updatescheck_mail_update_plugins_new');
-                update_option('mainwp_updatescheck_mail_update_plugins_new', MainWPUtility::array_merge($pluginsNewUpdateSaved, $pluginsNewUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_plugins_new', MainWPUtility::array_merge($pluginsNewUpdateSaved, $pluginsNewUpdate));
             }
 
             if (count($themesNewUpdate) != 0)
             {
                 $themesNewUpdateSaved = get_option('mainwp_updatescheck_mail_update_themes_new');
-                update_option('mainwp_updatescheck_mail_update_themes_new', MainWPUtility::array_merge($themesNewUpdateSaved, $themesNewUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_themes_new', MainWPUtility::array_merge($themesNewUpdateSaved, $themesNewUpdate));
             }
 
             if (count($coreToUpdate) != 0)
             {
                 $coreToUpdateSaved = get_option('mainwp_updatescheck_mail_update_core');
-                update_option('mainwp_updatescheck_mail_update_core', MainWPUtility::array_merge($coreToUpdateSaved, $coreToUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_core', MainWPUtility::array_merge($coreToUpdateSaved, $coreToUpdate));
             }
 
             if (count($pluginsToUpdate) != 0)
             {
                 $pluginsToUpdateSaved = get_option('mainwp_updatescheck_mail_update_plugins');
-                update_option('mainwp_updatescheck_mail_update_plugins', MainWPUtility::array_merge($pluginsToUpdateSaved, $pluginsToUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_plugins', MainWPUtility::array_merge($pluginsToUpdateSaved, $pluginsToUpdate));
             }
 
             if (count($themesToUpdate) != 0)
             {
                 $themesToUpdateSaved = get_option('mainwp_updatescheck_mail_update_themes');
-                update_option('mainwp_updatescheck_mail_update_themes', MainWPUtility::array_merge($themesToUpdateSaved, $themesToUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_update_themes', MainWPUtility::array_merge($themesToUpdateSaved, $themesToUpdate));
             }
 
             if (count($ignoredCoreToUpdate) != 0)
             {
                 $ignoredCoreToUpdateSaved = get_option('mainwp_updatescheck_mail_ignore_core');
-                update_option('mainwp_updatescheck_mail_ignore_core', MainWPUtility::array_merge($ignoredCoreToUpdateSaved, $ignoredCoreToUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_core', MainWPUtility::array_merge($ignoredCoreToUpdateSaved, $ignoredCoreToUpdate));
             }
 
             if (count($ignoredCoreNewUpdate) != 0)
             {
                 $ignoredCoreNewUpdateSaved = get_option('mainwp_updatescheck_mail_ignore_core_new');
-                update_option('mainwp_updatescheck_mail_ignore_core_new', MainWPUtility::array_merge($ignoredCoreNewUpdateSaved, $ignoredCoreNewUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_core_new', MainWPUtility::array_merge($ignoredCoreNewUpdateSaved, $ignoredCoreNewUpdate));
             }
 
             if (count($ignoredPluginsToUpdate) != 0)
             {
                 $ignoredPluginsToUpdateSaved = get_option('mainwp_updatescheck_mail_ignore_plugins');
-                update_option('mainwp_updatescheck_mail_ignore_plugins', MainWPUtility::array_merge($ignoredPluginsToUpdateSaved, $ignoredPluginsToUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_plugins', MainWPUtility::array_merge($ignoredPluginsToUpdateSaved, $ignoredPluginsToUpdate));
             }
 
             if (count($ignoredPluginsNewUpdate) != 0)
             {
                 $ignoredPluginsNewUpdateSaved = get_option('mainwp_updatescheck_mail_ignore_plugins_new');
-                update_option('mainwp_updatescheck_mail_ignore_plugins_new', MainWPUtility::array_merge($ignoredPluginsNewUpdateSaved, $ignoredPluginsNewUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_plugins_new', MainWPUtility::array_merge($ignoredPluginsNewUpdateSaved, $ignoredPluginsNewUpdate));
             }
 
             if (count($ignoredThemesToUpdate) != 0)
             {
                 $ignoredThemesToUpdateSaved = get_option('mainwp_updatescheck_mail_ignore_themes');
-                update_option('mainwp_updatescheck_mail_ignore_themes', MainWPUtility::array_merge($ignoredThemesToUpdateSaved, $ignoredThemesToUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_themes', MainWPUtility::array_merge($ignoredThemesToUpdateSaved, $ignoredThemesToUpdate));
             }
 
             if (count($ignoredThemesNewUpdate) != 0)
             {
                 $ignoredThemesNewUpdateSaved = get_option('mainwp_updatescheck_mail_ignore_themes_new');
-                update_option('mainwp_updatescheck_mail_ignore_themes_new', MainWPUtility::array_merge($ignoredThemesNewUpdateSaved, $ignoredThemesNewUpdate));
+                MainWPUtility::update_option('mainwp_updatescheck_mail_ignore_themes_new', MainWPUtility::array_merge($ignoredThemesNewUpdateSaved, $ignoredThemesNewUpdate));
             }
 
             if ($pluginConflicts != '')
             {
                 $pluginConflictsSaved = get_option('mainwp_updatescheck_mail_pluginconflicts');
                 if ($pluginConflictsSaved == false) $pluginConflictsSaved = '';
-                update_option('mainwp_updatescheck_mail_pluginconflicts', $pluginConflictsSaved . $pluginConflicts);
+                MainWPUtility::update_option('mainwp_updatescheck_mail_pluginconflicts', $pluginConflictsSaved . $pluginConflicts);
             }
 
             if ($themeConflicts != '')
             {
                 $themeConflictsSaved = get_option('mainwp_updatescheck_mail_themeconflicts');
                 if ($themeConflictsSaved == false) $themeConflictsSaved = '';
-                update_option('mainwp_updatescheck_mail_themeconflicts', $themeConflictsSaved . $themeConflicts);
+                MainWPUtility::update_option('mainwp_updatescheck_mail_themeconflicts', $themeConflictsSaved . $themeConflicts);
             }
 
             if ((count($coreToUpdate) == 0) && (count($pluginsToUpdate) == 0) && (count($themesToUpdate) == 0) && (count($ignoredCoreToUpdate) == 0)  && (count($ignoredCoreNewUpdate) == 0) && (count($ignoredPluginsToUpdate) == 0) && (count($ignoredPluginsNewUpdate) == 0) && (count($ignoredThemesToUpdate) == 0) && (count($ignoredThemesNewUpdate) == 0) && ($pluginConflicts == '') && ($themeConflicts == ''))
@@ -1009,7 +1009,7 @@ class MainWPSystem
                     if (!$backupRequired)
                     {
                         $sitesCheckCompleted[$siteId] = true;
-                        update_option('mainwp_automaticUpdate_backupChecks', $sitesCheckCompleted);
+                        MainWPUtility::update_option('mainwp_automaticUpdate_backupChecks', $sitesCheckCompleted);
                         continue;
                     }
 
@@ -1018,12 +1018,12 @@ class MainWPSystem
                         $result = MainWPManageSites::backup($siteId, 'full', '', '');
                         MainWPManageSites::backupDownloadFile($siteId, 'full', $result['url'], $result['local']);
                         $sitesCheckCompleted[$siteId] = true;
-                        update_option('mainwp_automaticUpdate_backupChecks', $sitesCheckCompleted);
+                        MainWPUtility::update_option('mainwp_automaticUpdate_backupChecks', $sitesCheckCompleted);
                     }
                     catch (Exception $e)
                     {
                         $sitesCheckCompleted[$siteId] = false;
-                        update_option('mainwp_automaticUpdate_backupChecks', $sitesCheckCompleted);
+                        MainWPUtility::update_option('mainwp_automaticUpdate_backupChecks', $sitesCheckCompleted);
                     }
                 }
             }
@@ -1094,7 +1094,7 @@ class MainWPSystem
         {
             return;
         }
-        update_option('mainwp_cron_last_ping', time());
+        MainWPUtility::update_option('mainwp_cron_last_ping', time());
 
         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsites());
         while ($websites && ($website = @MainWPDB::fetch_object($websites)))
@@ -1121,7 +1121,7 @@ class MainWPSystem
         {
             return;
         }
-        update_option('mainwp_cron_last_cronconflicts', time());
+        MainWPUtility::update_option('mainwp_cron_last_cronconflicts', time());
 
         MainWPAPISettings::testAPIs();
 
@@ -1180,8 +1180,8 @@ class MainWPSystem
                 }
             }
 
-            update_option('mainwp_pluginConflicts', $newPluginConflicts);
-            update_option('mainwp_themeConflicts', $newThemeConflicts);
+            MainWPUtility::update_option('mainwp_pluginConflicts', $newPluginConflicts);
+            MainWPUtility::update_option('mainwp_themeConflicts', $newThemeConflicts);
 
             return;
         }
@@ -1189,7 +1189,7 @@ class MainWPSystem
 
     function mainwp_cronbackups_continue_action()
     {
-        update_option('mainwp_cron_last_backups_continue', time());
+        MainWPUtility::update_option('mainwp_cron_last_backups_continue', time());
 
         $chunkedBackupTasks = get_option('mainwp_chunkedBackupTasks');
         if ($chunkedBackupTasks == 0) return;
@@ -1210,7 +1210,7 @@ class MainWPSystem
 
     function mainwp_cronbackups_action()
     {
-        update_option('mainwp_cron_last_backups', time());
+        MainWPUtility::update_option('mainwp_cron_last_backups', time());
 
         //Do cronjobs!
         //Config this in crontab: 0 0 * * * wget -q http://mainwp.com/wp-admin/?do=cron -O /dev/null 2>&1
@@ -1261,7 +1261,7 @@ class MainWPSystem
 
     function mainwp_cronstats_action()
     {
-        update_option('mainwp_cron_last_stats', time());
+        MainWPUtility::update_option('mainwp_cron_last_stats', time());
         if (get_option('mainwp_seo') != 1) return;
 
         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getWebsitesStatsUpdateSQL());
@@ -1395,6 +1395,7 @@ class MainWPSystem
 
     function post_updated_messages($messages)
     {
+        $messages['post'][98] = 'Wordpress Seo values saved.';
         $messages['post'][99] = 'You have to select the sites you wish to publish to.';
         return $messages;
     }
@@ -1432,14 +1433,19 @@ class MainWPSystem
     //This function will read the metaboxes & save them to the post
     function publish_bulkpost($post_id)
     {
+        $save_seo_value = isset($_POST["mainwp_wpseo_metabox_save_values"]) && (!empty($_POST["mainwp_wpseo_metabox_save_values"]))? true : false;
+        $message_id = 99;
+        if ($save_seo_value)
+            $message_id = 98;
+
         //Read extra metabox
         $pid = $this->metaboxes->select_sites_handle($post_id, 'bulkpost');
 
-        if ($pid == $post_id) {
+        if ($save_seo_value || $pid == $post_id) {
             /** @var $wpdb wpdb */
             global $wpdb;
             $wpdb->update($wpdb->posts, array('post_status' => 'draft'), array('ID' => $post_id));
-            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "99", "hideall" => 1), $location);'));
+            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "' . $message_id . '", "hideall" => 1), $location);'));
         }
         else
         {
@@ -1464,14 +1470,19 @@ class MainWPSystem
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
             return;
 
+        $save_seo_value = isset($_POST["mainwp_wpseo_metabox_save_values"]) && (!empty($_POST["mainwp_wpseo_metabox_save_values"]))? true : false;
+        $message_id = 99;
+        if ($save_seo_value)
+            $message_id = 98;
+
         //Read extra metabox
         $pid = $this->metaboxes->select_sites_handle($post_id, 'bulkpost');
 
-        if ($pid == $post_id) {
+        if ($save_seo_value || $pid == $post_id) {
             /** @var $wpdb wpdb */
             global $wpdb;
             $wpdb->update($wpdb->posts, array('post_status' => 'draft'), array('ID' => $post_id));
-            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "99", "hideall" => 1), $location);'));
+            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "' . $message_id . '", "hideall" => 1), $location);'));
         }
         else
         {
@@ -1488,14 +1499,19 @@ class MainWPSystem
     //This function will read the metaboxes & save them to the post
     function publish_bulkpage($post_id)
     {
+        $save_seo_value = isset($_POST["mainwp_wpseo_metabox_save_values"]) && (!empty($_POST["mainwp_wpseo_metabox_save_values"]))? true : false;
+        $message_id = 99;
+        if ($save_seo_value)
+            $message_id = 98;
+
         //Read extra metabox
         $pid = $this->metaboxes->select_sites_handle($post_id, 'bulkpage');
 
-        if ($pid == $post_id) {
+        if ($save_seo_value || $pid == $post_id) {
             /** @var $wpdb wpdb */
             global $wpdb;
             $wpdb->update($wpdb->posts, array('post_status' => 'draft'), array('ID' => $post_id));
-            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "99", "hideall" => 1), $location);'));
+            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "' . $message_id . '", "hideall" => 1), $location);'));
         }
         else
         {
@@ -1517,14 +1533,19 @@ class MainWPSystem
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE )
             return;
 
+        $save_seo_value = isset($_POST["mainwp_wpseo_metabox_save_values"]) && (!empty($_POST["mainwp_wpseo_metabox_save_values"]))? true : false;
+        $message_id = 99;
+        if ($save_seo_value)
+            $message_id = 98;
+
         //Read extra metabox
         $pid = $this->metaboxes->select_sites_handle($post_id, 'bulkpage');
 
-        if ($pid == $post_id) {
+        if ($save_seo_value || $pid == $post_id) {
             /** @var $wpdb wpdb */
             global $wpdb;
             $wpdb->update($wpdb->posts, array('post_status' => 'draft'), array('ID' => $post_id));
-            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "99", "hideall" => 1), $location);'));
+            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "' . $message_id . '", "hideall" => 1), $location);'));
         }
         else
         {
@@ -1559,7 +1580,7 @@ class MainWPSystem
             'description' => 'description...',
             'supports' => array('title', 'editor', 'excerpt', 'thumbnail', 'custom-fields', 'comments', 'revisions'),
             //'taxonomies' => array('category', 'post_tag', 'page-category'),
-            'public' => false,
+            'public' => true,
             'show_ui' => true,
             //'show_in_menu' => 'index.php',
             'show_in_nav_menus' => false,
@@ -1604,7 +1625,7 @@ class MainWPSystem
             'description' => 'description...',
             'supports' => array('title', 'editor', 'excerpt', 'thumbnail', 'custom-fields', 'comments', 'revisions'),
             //'taxonomies' => array('category', 'post_tag', 'page-category'),
-            'public' => false,
+            'public' => true,
             'show_ui' => true,
             //'show_in_menu' => 'index.php',
             'show_in_nav_menus' => false,
@@ -1741,7 +1762,7 @@ class MainWPSystem
             }
         }
         ?>
-        <div id="refresh-status-box" title="Updating Websites" style="display: none; text-align: center">
+        <div id="refresh-status-box" title="Syncing Websites" style="display: none; text-align: center">
             <div id="refresh-status-progress"></div>
             <span id="refresh-status-current">0</span> / <span id="refresh-status-total"><?php echo is_array($websites) ? count($websites) : MainWPDB::num_rows($websites); ?></span> updated
             <div style="height: 160px; overflow: auto; margin-top: 20px; margin-bottom: 10px; text-align: left" id="refresh-status-content">

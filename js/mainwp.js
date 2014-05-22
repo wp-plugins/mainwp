@@ -834,7 +834,7 @@ dashboard_update_next = function()
     currentThreads++;
     websitesLeft--;
     var websiteId = websitesToUpdate[currentWebsite++];
-    dashboard_update_site_status(websiteId, __('UPDATING'));
+    dashboard_update_site_status(websiteId, __('SYNCING'));
     var data = mainwp_secure_data({
         action:'mainwp_syncsites',
         wp_id: websiteId
@@ -1557,7 +1557,7 @@ managebackups_run_now = function(el)
     jQuery('#managebackups-task-status-close').prop('value', __('Cancel'));
     jQuery('#managebackups-task-status-box').dialog({
         resizable: false,
-        height: 330,
+        height: 350,
         width: 750,
         modal: true,
         close: function(event, ui) { if (!manageBackupsError) { location.reload();}}});
@@ -3688,7 +3688,7 @@ backup = function ()
     jQuery('#managesite-backup-status-text').html(dateToHMS(new Date()) + ' '+__('Creating the backupfile on the child installation, this might take a while depending on the size. Please be patient.'));
     jQuery('#managesite-backup-status-box').dialog({
         resizable: false,
-        height: 330,
+        height: 350,
         width: 500,
         modal: true,
         close: function(event, ui) { if (!backupError) { location.reload(); }}});
@@ -5397,7 +5397,8 @@ dateToHMS = function(date) {
         var time = moment(date);
         var format = mainwpParams['time_format'];
         format = format.replace('g', 'h');
-        format = format.replace('i', 'm');
+        format = format.replace('i', 'mm');
+        format = format.replace('s', 'ss');
         format = format.replace('F', 'MMMM');
         format = format.replace('j', 'D');
         format = format.replace('Y', 'YYYY');
@@ -5641,13 +5642,13 @@ mainwp_showhide_quick_guide = function(show, tut) {
         jQuery('#mainwp-qsg-tips').hide();
         jQuery('#mainwp-quick-start-guide').show();
  }
-}
+};
 
 mainwp_showhide_quick_tut = function() {
     var tut = mainwp_getCookie('qsg_number');
     jQuery('.mainwp-qsg').hide();
     jQuery('.mainwp-qsg[number="' + tut + '"]').show();
-}
+};
 
 
 function mainwp_setCookie(c_name, value, expiredays)
