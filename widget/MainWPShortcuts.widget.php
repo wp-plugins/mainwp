@@ -41,6 +41,7 @@ class MainWPShortcuts
         <div style="display: inline-block; width: 100px;"><?php _e('Frontpage:','mainwp'); ?></div>
         <a class="mainwp-open-link" target="_blank" href="<?php echo $website->url; ?>"><?php _e('Open','mainwp'); ?></a>
     </div>
+    <?php do_action("mainwp_shortcuts_widget", $website); ?>
     <div id="mainwp_notes_overlay" class="mainwp_overlay"></div>
     <div id="mainwp_notes" class="mainwp_popup">
         <a id="mainwp_notes_closeX" class="mainwp_closeX" style="display: inline; "></a>
@@ -50,6 +51,7 @@ class MainWPShortcuts
             <textarea style="width: 580px !important; height: 300px;"
                       id="mainwp_notes_note"></textarea>
         </div>
+        <div><em>Allowed HTML Tags: &lt;p&gt;, &lt;srtong&gt;, &lt;em&gt;, &lt;br/&gt;, &lt;hr/&gt;, &lt;a&gt; </em></div><br/>
         <form>
             <div style="float: right" id="mainwp_notes_status"></div>
             <input type="button" class="button cont button-primary" id="mainwp_notes_save" value="<?php _e('Save Note','mainwp'); ?>"/>

@@ -362,7 +362,7 @@ class MainWPManageSites
         return true;
     }
 
-    public static function backup($pSiteId, $pType, $pSubfolder, $pExclude, $pFilename = null)
+    public static function backup($pSiteId, $pType, $pSubfolder, $pExclude, $pFilename = null, $pFileNameUID = '')
     {
         if (trim($pFilename) == '') $pFilename = null;
 
@@ -393,7 +393,7 @@ class MainWPManageSites
         $maximumFileDescriptors = ($maximumFileDescriptors === false ? 0 : $maximumFileDescriptors);
         $file = str_replace(array('%sitename%', '%url%', '%date%', '%time%', '%type%'), array(MainWPUtility::sanitize($website->name), $websiteCleanUrl, date('m-d-Y'), date('G\hi\ms\s'), $pType), $pFilename);
 
-        $information = MainWPUtility::fetchUrlAuthed($website, 'backup', array('type' => $pType, 'exclude' => $pExclude, 'file_descriptors' => $maximumFileDescriptors, 'file' => $file));
+        $information = MainWPUtility::fetchUrlAuthed($website, 'backup', array('type' => $pType, 'exclude' => $pExclude, 'file_descriptors' => $maximumFileDescriptors, 'file' => $file, 'fileUID' => $pFileNameUID));
 
         if (isset($information['error']))
         {
@@ -489,6 +489,7 @@ class MainWPManageSites
         add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPManageBackups::getMetaboxName(), array(MainWPManageBackups::getClassName(), 'renderMetabox'), self::$page, 'normal', 'core');
 		add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPWidgetPlugins::getName(), array(MainWPWidgetPlugins::getClassName(), 'render'), self::$page, 'normal', 'core');
 		add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPWidgetThemes::getName(), array(MainWPWidgetThemes::getClassName(), 'render'), self::$page, 'normal', 'core');
+        add_meta_box(self::$page . '-metaboxes-contentbox-' . $i++, MainWPNotes::getName(), array(MainWPNotes::getClassName(), 'render'), self::$page, 'normal', 'core');
 		
         $extMetaBoxs = MainWPSystem::Instance()->apply_filter('mainwp-getmetaboxes', array());
         $extMetaBoxs = apply_filters('mainwp-getmetaboxs', $extMetaBoxs);
