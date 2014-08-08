@@ -3,7 +3,10 @@
 class MainWPMetaBoxes
 {
     public static function initMetaBoxes()
-    {
+    {        
+        add_filter('postbox_classes_bulkpost_select-sites-div',array('MainWPMetaBoxes', 'add_metabox_classes'));
+        add_filter('postbox_classes_bulkpage_select-sites-div',array('MainWPMetaBoxes', 'add_metabox_classes'));
+        
         //Add metaboxes to bulkpost
         add_meta_box('select-sites-div', __('Select sites', 'mainwp') . '<div class="mainwp_sites_selectcount toggle">0</div>', array(&MainWPSystem::Instance()->metaboxes, 'select_sites'), 'bulkpost', 'side', 'default');
         add_meta_box('add-categories-div', __('Categories', 'mainwp'), array(&MainWPSystem::Instance()->metaboxes, 'add_categories'), 'bulkpost', 'side', 'default');
@@ -13,6 +16,11 @@ class MainWPMetaBoxes
         //Add metaboxes to bulkpage
         add_meta_box('select-sites-div', __('Select sites', 'mainwp') . '<div class="mainwp_sites_selectcount toggle">0</div>', array(&MainWPSystem::Instance()->metaboxes, 'select_sites'), 'bulkpage', 'side', 'default');
         add_meta_box('add-slug-div', __('Slug', 'mainwp'), array(&MainWPSystem::Instance()->metaboxes, 'add_slug'), 'bulkpage', 'side', 'default');
+    }
+
+    static function add_metabox_classes($classes) {
+        array_push($classes,'mainwp_select_sites_wrapper');
+        return $classes;
     }
 
     function select_sites($post)
@@ -75,11 +83,19 @@ class MainWPMetaBoxes
         return $post_id;
     }
 
-    function add_categories($post) {      
+    function add_categories($post) {
         
-        $categories = apply_filters("mainwp_bulkpost_saved_categories", $post, array());
+        // depdecated, 1.0.9.2-beta
+        $categories = apply_filters("mainwp_bulkpost_saved_categories", $post, array());        
+        if (empty($categories) || (is_array($categories) && count($categories) == 1 && empty($categories[0]))) { // to compatible          
+            if ($post) {
+                $categories = base64_decode(get_post_meta($post->ID, '_categories', true));                      
+                $categories = explode(",", $categories);                
+            }
+        }        
+        
         if (!is_array($categories)) 
-            $categories = array();        
+            $categories = array();                
         $uncat = __('Uncategorized','mainwp');
         
         ?>

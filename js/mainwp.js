@@ -1333,12 +1333,10 @@ rightnow_themes_unignore_globally = function (slug) {
     return false;
 };
 rightnow_plugins_upgrade = function (slug, websiteid) {
-    //todo: RS: add check for backups
     return rightnow_plugins_upgrade_int(slug, websiteid);
 };
 
 rightnow_themes_upgrade = function (slug, websiteid) {
-    //todo: RS: add check for backups
     return rightnow_themes_upgrade_int(slug, websiteid);
 };
 
@@ -1544,7 +1542,7 @@ jQuery(document).ready(function () {
     var siteId = jQuery('#backup_exclude_folders').attr('siteid');
     var sites = jQuery('#backup_exclude_folders').attr('sites');
     var groups = jQuery('#backup_exclude_folders').attr('groups');
-    if (jQuery('#backup_task_id').val() == undefined) jQuery('#backup_exclude_folders').fileTree({ root: '', script: ajaxurl + '?action=mainwp_site_dirs&site='+encodeURIComponent(siteId == undefined ? '' : siteId)+'&sites='+encodeURIComponent(sites == undefined ? '' : sites)+'&groups='+encodeURIComponent(groups == undefined ? '' : groups), multiFolder: false });
+    if (jQuery('#backup_task_id').val() == undefined) jQuery('#backup_exclude_folders').fileTree({ root: '', script: ajaxurl + '?action=mainwp_site_dirs&site='+encodeURIComponent(siteId == undefined ? '' : siteId)+'&sites='+encodeURIComponent(sites == undefined ? '' : sites)+'&groups='+encodeURIComponent(groups == undefined ? '' : groups), multiFolder: false, postFunction: updateExcludedFolders});
     jQuery('.jqueryFileTree li a').live('mouseover', function() { jQuery(this).children('.exclude_folder_control').show() });
     jQuery('.jqueryFileTree li a').live('mouseout', function() { jQuery(this).children('.exclude_folder_control').hide() });
 });
@@ -1719,7 +1717,7 @@ managebackups_backup_download_file = function(pSiteId, pSiteName, type, url, fil
         clearInterval(pInterVal);
         jQuery('#managebackups-task-status-progress[siteId="'+pSiteId+'"]').progressbar();
         jQuery('#managebackups-task-status-progress[siteId="'+pSiteId+'"]').progressbar('value', pSize);
-        appendToDiv('#managebackups-task-status-text', '[' + pSiteName + '] '+__('Download from site child completed.'));
+        appendToDiv('#managebackups-task-status-text', '[' + pSiteName + '] '+__('Download from child site completed.'));
         managebackups_backup_upload_file(pSiteId, pSiteName, pFile, pRegexFile, pSubfolder, pRemoteDestinations, pType, pSize);
     } }(file, regexfile, subfolder, remote_destinations, size, type, interVal, pSiteName, pSiteId), 'json');
 };
@@ -1871,6 +1869,10 @@ mainwp_managebackups_update = function (event) {
             schedule: (jQuery('#mainwp_managebackups_schedule_daily').hasClass('mainwp_action_down') ? 'daily' : (jQuery('#mainwp_managebackups_schedule_weekly').hasClass('mainwp_action_down') ? 'weekly' : 'monthly')),
             type:(jQuery('#backup_type_full').hasClass('mainwp_action_down') ? 'full' : 'db'),
             exclude:jQuery('#excluded_folders_list').val(),
+            excludebackup: (jQuery('#mainwp-known-backup-locations').attr('checked') ? 1 : 0),
+            excludecache: (jQuery('#mainwp-known-cache-locations').attr('checked') ? 1 : 0),
+            excludenonwp: (jQuery('#mainwp-non-wordpress-folders').attr('checked') ? 1 : 0),
+            excludezip: (jQuery('#mainwp-zip-archives').attr('checked') ? 1 : 0),
             'groups[]':selected_groups,
             'sites[]':selected_sites,
             subfolder:jQuery('#mainwp_managebackups_add_subfolder').val(),
@@ -1959,6 +1961,10 @@ mainwp_managebackups_add = function (event) {
             schedule:(jQuery('#mainwp_managebackups_schedule_daily').hasClass('mainwp_action_down') ? 'daily' : (jQuery('#mainwp_managebackups_schedule_weekly').hasClass('mainwp_action_down') ? 'weekly' : 'monthly')),
             type:(jQuery('#backup_type_full').hasClass('mainwp_action_down') ? 'full' : 'db'),
             exclude:(jQuery('#backup_type_full').hasClass('mainwp_action_down') ? jQuery('#excluded_folders_list').val() : ''),
+            excludebackup: (jQuery('#mainwp-known-backup-locations').attr('checked') ? 1 : 0),
+            excludecache: (jQuery('#mainwp-known-cache-locations').attr('checked') ? 1 : 0),
+            excludenonwp: (jQuery('#mainwp-non-wordpress-folders').attr('checked') ? 1 : 0),
+            excludezip: (jQuery('#mainwp-zip-archives').attr('checked') ? 1 : 0),
             'groups[]':selected_groups,
             'sites[]':selected_sites,
             subfolder: jQuery('#mainwp_managebackups_add_subfolder').val(),
@@ -2117,12 +2123,56 @@ jQuery(document).on('click', '#mainwp_backup_destinations', function() {
 jQuery(document).on('click', '.mainwp_action#backup_type_full', function() {
     jQuery('.mainwp_action#backup_type_db').removeClass('mainwp_action_down');
     jQuery(this).addClass('mainwp_action_down');
+    jQuery('[class^=mainwp-exclude]').show();
     jQuery('.mainwp_backup_exclude_files_content').show();
     return false;
 });
+
+/*   Suggested Excludes   */
+
+jQuery(document).on('click', '#mainwp-show-kbl-folders', function(){
+    jQuery('#mainwp-show-kbl-folders').hide();
+    jQuery('#mainwp-hide-kbl-folders').show();
+    jQuery('#mainwp-kbl-content').show();
+    return false;
+});
+jQuery(document).on('click', '#mainwp-hide-kbl-folders', function(){
+    jQuery('#mainwp-show-kbl-folders').show();
+    jQuery('#mainwp-hide-kbl-folders').hide();
+    jQuery('#mainwp-kbl-content').hide();
+    return false;
+});
+
+jQuery(document).on('click', '#mainwp-show-kcl-folders', function(){
+    jQuery('#mainwp-show-kcl-folders').hide();
+    jQuery('#mainwp-hide-kcl-folders').show();
+    jQuery('#mainwp-kcl-content').show();
+    return false;
+});
+jQuery(document).on('click', '#mainwp-hide-kcl-folders', function(){
+    jQuery('#mainwp-show-kcl-folders').show();
+    jQuery('#mainwp-hide-kcl-folders').hide();
+    jQuery('#mainwp-kcl-content').hide();
+    return false;
+});
+
+jQuery(document).on('click', '#mainwp-show-nwl-folders', function(){
+    jQuery('#mainwp-show-nwl-folders').hide();
+    jQuery('#mainwp-hide-nwl-folders').show();
+    jQuery('#mainwp-nwl-content').show();
+    return false;
+});
+jQuery(document).on('click', '#mainwp-hide-nwl-folders', function(){
+    jQuery('#mainwp-show-nwl-folders').show();
+    jQuery('#mainwp-hide-nwl-folders').hide();
+    jQuery('#mainwp-nwl-content').hide();
+    return false;
+});
+
 jQuery(document).on('click', '.mainwp_action#backup_type_db', function() {
     jQuery('.mainwp_action#backup_type_full').removeClass('mainwp_action_down');
     jQuery(this).addClass('mainwp_action_down');
+    jQuery('[class^=mainwp-exclude]').hide();
     jQuery('.mainwp_backup_exclude_files_content').hide();
     return false;
 });
@@ -2753,7 +2803,7 @@ jQuery(document).ready(function () {
         else
             jQuery(this).parent().removeClass('selected_sites_item_checked');
 
-        mainwp_selected_refresh_count();
+        mainwp_selected_refresh_count(this);
     });
     jQuery('.mainwp_selected_sites_item input:radio').live('change', function () {
         if (jQuery(this).is(':checked'))
@@ -2764,7 +2814,7 @@ jQuery(document).ready(function () {
         else
             jQuery(this).parent().removeClass('selected_sites_item_checked');
 
-        mainwp_selected_refresh_count();
+        mainwp_selected_refresh_count(this);
     });
     jQuery('.mainwp_selected_groups_item input:checkbox').live('change', function () {
         if (jQuery(this).is(':checked'))
@@ -2772,7 +2822,7 @@ jQuery(document).ready(function () {
         else
             jQuery(this).parent().removeClass('selected_groups_item_checked');
 
-        mainwp_selected_refresh_count();
+        mainwp_selected_refresh_count(this);
     });
     jQuery('.mainwp_selected_groups_item input:radio').live('change', function () {
         if (jQuery(this).is(':checked'))
@@ -2783,22 +2833,23 @@ jQuery(document).ready(function () {
         else
             jQuery(this).parent().removeClass('selected_groups_item_checked');
 
-        mainwp_selected_refresh_count();
+        mainwp_selected_refresh_count(this);
     });
     
 });
-mainwp_selected_refresh_count = function()
+mainwp_selected_refresh_count = function(me)
 {
+    var parent = jQuery(me).closest('.mainwp_select_sites_wrapper');
     var value = 0;
-    if (jQuery('#select_by').val() == 'site')
+    if (parent.find('#select_by').val() == 'site')
     {
-        value = jQuery('.selected_sites_item_checked').length;
+        value = parent.find('.selected_sites_item_checked').length;
     }
     else
     {
-        value = jQuery('.selected_groups_item_checked').length;
+        value = parent.find('.selected_groups_item_checked').length;
     }
-    jQuery('.mainwp_sites_selectcount').html(value);
+    parent.find('.mainwp_sites_selectcount').html(value);
 };
 mainwp_site_select = function (elem) {
     mainwp_managebackups_updateExcludefolders();
@@ -2808,12 +2859,13 @@ mainwp_group_select = function (elem) {
     mainwp_managebackups_updateExcludefolders();
     mainwp_newpost_updateCategories();
 };
-mainwp_ss_select = function (val) {
-    if (jQuery('#select_by').val() == 'site') {
-        jQuery('#selected_sites INPUT:checkbox').attr('checked', val).change();
+mainwp_ss_select = function (me, val) {  
+    var parent = jQuery(me).closest('.mainwp_select_sites_wrapper');    
+    if (parent.find('#select_by').val() == 'site') {
+        parent.find('#selected_sites INPUT:checkbox').attr('checked', val).change();
     }
     else { //group
-        jQuery('#selected_groups INPUT:checkbox').attr('checked', val).change();
+        parent.find('#selected_groups INPUT:checkbox').attr('checked', val).change();
     }
     mainwp_managebackups_updateExcludefolders();
     mainwp_newpost_updateCategories();
@@ -2841,8 +2893,18 @@ mainwp_remove_all_cats = function (me) {
         parent.find('.selected_cats').html('<p class="remove">'+__('No selected Categories')+'</p>');  // remove all categories
 };
 
+var executingUpdateExcludeFolders = false;
+var queueUpdateExcludeFolders = 0;
 mainwp_managebackups_updateExcludefolders = function()
 {
+    if (executingUpdateExcludeFolders)
+    {
+        queueUpdateExcludeFolders++;
+        return;
+    }
+
+    executingUpdateExcludeFolders = true;
+
     var elem = jQuery('#backup_exclude_folders');
     if (elem)
     {
@@ -2854,11 +2916,35 @@ mainwp_managebackups_updateExcludefolders = function()
         else { //group
             groups = jQuery.map(jQuery('#selected_groups INPUT:checkbox:checked'), function(el, i) { return jQuery(el).val(); });
         }
-        elem.fileTree({ root: '', script: ajaxurl + '?action=mainwp_site_dirs&sites='+encodeURIComponent(sites.join(','))+'&groups='+encodeURIComponent(groups.join(',')), multiFolder: false });
+        elem.fileTree({ root: '', script: ajaxurl + '?action=mainwp_site_dirs&sites='+encodeURIComponent(sites.join(','))+'&groups='+encodeURIComponent(groups.join(',')), multiFolder: false, postFunction: updateExcludedFoldersPostFunc});
     }
 };
+updateExcludedFoldersPostFunc = function()
+{
+    if (queueUpdateExcludeFolders > 0)
+    {
+        queueUpdateExcludeFolders--;
+        executingUpdateExcludeFolders = false;
+        mainwp_managebackups_updateExcludefolders();
+    }
+    else
+    {
+        executingUpdateExcludeFolders = false;
+        updateExcludedFolders();
+    }
+};
+var executingUpdateCategories = false;
+var queueUpdateCategories = 0;
 mainwp_newpost_updateCategories = function()
 {
+    if (executingUpdateCategories)
+    {
+        queueUpdateCategories++;
+        return;
+    }
+
+    executingUpdateCategories = true;
+
     var elem = jQuery('.post_add_categories');
     if (elem)
     {
@@ -2888,8 +2974,26 @@ mainwp_newpost_updateCategories = function()
                 jQuery(pSiteCategories).each(function (key, value) { jQuery(value).parent().parent().remove() });
 
                 jQuery('#categorychecklist').append(response);
+                updateCategoriesPostFunc();
             }
         }(site_categories));
+    }
+    else
+    {
+        updateCategoriesPostFunc();
+    }
+};
+updateCategoriesPostFunc = function()
+{
+    if (queueUpdateCategories > 0)
+    {
+        queueUpdateCategories--;
+        executingUpdateCategories = false;
+        mainwp_newpost_updateCategories();
+    }
+    else
+    {
+        executingUpdateCategories = false;
     }
 };
 
@@ -2945,33 +3049,34 @@ jQuery(document).on('keyup', '#selected_groups-filter', function() {
     mainwp_managebackups_updateExcludefolders();
     mainwp_newpost_updateCategories();
 });
-mainwp_ss_select_by = function (what) {
-    jQuery('#mainwp_ss_site_link').css('display', (what == 'site' ? 'none' : 'inline'));
-    jQuery('#mainwp_ss_site_text').css('display', (what == 'site' ? 'inline' : 'none'));
+mainwp_ss_select_by = function (me, what) {
+    var parent = jQuery(me).closest('.mainwp_select_sites_wrapper');
+    parent.find('#mainwp_ss_site_link').css('display', (what == 'site' ? 'none' : 'inline'));
+    parent.find('#mainwp_ss_site_text').css('display', (what == 'site' ? 'inline' : 'none'));
 
-    jQuery('#mainwp_ss_group_link').css('display', (what == 'group' ? 'none' : 'inline'));
-    jQuery('#mainwp_ss_group_text').css('display', (what == 'group' ? 'inline' : 'none'));
+    parent.find('#mainwp_ss_group_link').css('display', (what == 'group' ? 'none' : 'inline'));
+    parent.find('#mainwp_ss_group_text').css('display', (what == 'group' ? 'inline' : 'none'));
 
-    jQuery('#selected_sites').css('display', (what == 'site' ? 'block' : 'none'));
-    jQuery('#selected_groups').css('display', (what == 'group' ? 'block' : 'none'));
+    parent.find('#selected_sites').css('display', (what == 'site' ? 'block' : 'none'));
+    parent.find('#selected_groups').css('display', (what == 'group' ? 'block' : 'none'));
 
-    jQuery('#selected_sites-filter').css('display', (what == 'site' ? 'block' : 'none'));
-    jQuery('#selected_groups-filter').css('display', (what == 'group' ? 'block' : 'none'));
+    parent.find('#selected_sites-filter').css('display', (what == 'site' ? 'block' : 'none'));
+    parent.find('#selected_groups-filter').css('display', (what == 'group' ? 'block' : 'none'));
 
     if (what == 'site') {
-        jQuery('#selected_groups INPUT:checkbox').attr('checked', false);
-        jQuery('#selected_groups .selected_groups_item_checked').removeClass('selected_groups_item_checked');
+        parent.find('#selected_groups INPUT:checkbox').attr('checked', false);
+        parent.find('#selected_groups .selected_groups_item_checked').removeClass('selected_groups_item_checked');
 
-        mainwp_selected_refresh_count();
+        mainwp_selected_refresh_count(me);
     }
     else { //group
-        jQuery('#selected_sites INPUT:checkbox').attr('checked', false);
-        jQuery('#selected_sites .selected_sites_item_checked').removeClass('selected_sites_item_checked');
+        parent.find('#selected_sites INPUT:checkbox').attr('checked', false);
+        parent.find('#selected_sites .selected_sites_item_checked').removeClass('selected_sites_item_checked');
 
-        mainwp_selected_refresh_count();
+        mainwp_selected_refresh_count(me);
     }
 
-    jQuery('#select_by').val(what);
+    parent.find('#select_by').val(what);
     return false;
 };
 
@@ -3742,6 +3847,10 @@ backup = function ()
 
         type:type,
         exclude:jQuery('#excluded_folders_list').val(),
+        excludebackup: (jQuery('#mainwp-known-backup-locations').attr('checked') ? 1 : 0),
+        excludecache: (jQuery('#mainwp-known-cache-locations').attr('checked') ? 1 : 0),
+        excludenonwp: (jQuery('#mainwp-non-wordpress-folders').attr('checked') ? 1 : 0),
+        excludezip: (jQuery('#mainwp-zip-archives').attr('checked') ? 1 : 0),
         filename: fileName,
         fileNameUID: fileNameUID,
 
@@ -3840,7 +3949,7 @@ backup_download_file = function(pSiteId, type, url, file, regexfile, size, subfo
         clearInterval(pInterVal);
         jQuery('#managesite-backup-status-progress').progressbar();
         jQuery('#managesite-backup-status-progress').progressbar('value', pSize);
-        appendToDiv('#managesite-backup-status-text', __('Download from site child completed.'));
+        appendToDiv('#managesite-backup-status-text', __('Download from child site completed.'));
         backup_upload_file(pSiteId, pFile, pRegexFile, pSubfolder, pRemoteDestinations, pType, pSize);
     } }(pSiteId, file, regexfile, subfolder, remote_destinations, size, type, interVal), 'json');
 };
@@ -5798,3 +5907,36 @@ scrollToElement = function(pElement) {
 
     return false;
 };
+
+jQuery(document).ready(function() {
+    jQuery('#backup_filename').keypress(function (e)
+    {
+        var chr = String.fromCharCode(e.which);
+        return ("$^&*/".indexOf(chr) < 0);
+    });
+    jQuery('#backup_filename').change( function() {
+        var value = jQuery(this).val();
+        var notAllowed = ['$', '^', '&', '*', '/'];
+        for (var i = 0; i < notAllowed.length; i++)
+        {
+            var char = notAllowed[i];
+            if (value.indexOf(char) >= 0)
+            {
+                value = value.replace(new RegExp('\\' + char, 'g'), '');
+                jQuery(this).val(value);
+            }
+        }
+    });
+});
+
+updateExcludedFolders = function()
+{
+    var excludedBackupFiles = jQuery('#excludedBackupFiles').html();
+    jQuery('#mainwp-kbl-content').val(excludedBackupFiles == undefined ? '' : excludedBackupFiles);
+
+    var excludedCacheFiles = jQuery('#excludedCacheFiles').html();
+    jQuery('#mainwp-kcl-content').val(excludedCacheFiles == undefined ? '' : excludedCacheFiles);
+
+    var excludedNonWPFiles = jQuery('#excludedNonWPFiles').html();
+    jQuery('#mainwp-nwl-content').val(excludedNonWPFiles == undefined ? '' : excludedNonWPFiles);
+}
