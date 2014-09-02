@@ -508,7 +508,7 @@ class MainWPManageSitesView
             </td>
         </tr>
         <tr>
-            <th scope="row"><?php _e('Load files in memory before zipping','mainwp');?> <?php MainWPUtility::renderToolTip('This causes the files to be opened and closed immediately, using less simultaneous I/O operations on the disk. For huge sites with a lot of files we advice to disable this, memory usage will drop but we will use more file handlers when backing up.', 'http://docs.mainwp.com/maximum-number-of-file-descriptors/'); ?></th>
+            <th scope="row"><?php _e('Load files in memory before zipping','mainwp');?> <?php MainWPUtility::renderToolTip('This causes the files to be opened and closed immediately, using less simultaneous I/O operations on the disk. For huge sites with a lot of files we advice to disable this, memory usage will drop but we will use more file handlers when backing up.', 'http://docs.mainwp.com/load-files-memory/'); ?></th>
             <td>
                 <div class="mainwp-checkbox">
                 <input type="checkbox" id="mainwp_options_loadFilesBeforeZip" name="mainwp_options_loadFilesBeforeZip" <?php echo ($loadFilesBeforeZip ? 'checked="checked"' : ''); ?>"/>
@@ -950,7 +950,7 @@ class MainWPManageSitesView
             <div class="inside">
             <table class="form-table" style="width: 100%">
                 <tr>
-                    <th scope="row">Load files in memory before zipping <?php MainWPUtility::renderToolTip('This causes the files to be opened and closed immediately, using less simultaneous I/O operations on the disk. For huge sites with a lot of files we advice to disable this, memory usage will drop but we will use more file handlers when backing up.', 'http://docs.mainwp.com/maximum-number-of-file-descriptors/'); ?></th>
+                    <th scope="row">Load files in memory before zipping <?php MainWPUtility::renderToolTip('This causes the files to be opened and closed immediately, using less simultaneous I/O operations on the disk. For huge sites with a lot of files we advice to disable this, memory usage will drop but we will use more file handlers when backing up.', 'http://docs.mainwp.com/load-files-memory/'); ?></th>
                     <td>
                         <span id="mainwp_options_loadFilesBeforeZip_container" style="cursor: default;"><input type="hidden" id="mainwp_options_loadFilesBeforeZip" name="mainwp_options_loadFilesBeforeZip" value="<?php echo $website->loadFilesBeforeZip; ?>"/></span> <i>(<?php _e('When not enabled or disabled the global setting will be used.', 'mainwp'); ?>)</i>
                     </td>
