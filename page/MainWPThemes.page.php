@@ -22,7 +22,7 @@ class MainWPThemes
 
         add_submenu_page('mainwp_tab', __('Themes','mainwp'), '<span id="mainwp-Themes">' . __('Themes','mainwp') . '</span>', 'read', 'ThemesManage', array(MainWPThemes::getClassName(), 'render'));
         add_submenu_page('mainwp_tab', __('Themes','mainwp'), '<div class="mainwp-hidden">Install</div>', 'read', 'ThemesInstall', array(MainWPThemes::getClassName(), 'renderInstall'));
-        add_submenu_page('mainwp_tab', __('Themes','mainwp'), '<div class="mainwp-hidden">Auto Update Trust</div>', 'read', 'ThemesAutoUpdate', array(MainWPThemes::getClassName(), 'renderAutoUpdate'));
+        add_submenu_page('mainwp_tab', __('Themes','mainwp'), '<div class="mainwp-hidden">Auto Updates</div>', 'read', 'ThemesAutoUpdate', array(MainWPThemes::getClassName(), 'renderAutoUpdate'));
         add_submenu_page('mainwp_tab', __('Themes','mainwp'), '<div class="mainwp-hidden">Ignored Updates</div>', 'read', 'ThemesIgnore', array(MainWPThemes::getClassName(), 'renderIgnore'));
         add_submenu_page('mainwp_tab', __('Themes','mainwp'), '<div class="mainwp-hidden">Ignored Conflicts</div>', 'read', 'ThemesIgnoredConflicts', array(MainWPThemes::getClassName(), 'renderIgnoredConflicts'));
         add_submenu_page('mainwp_tab', __('Themes Help','mainwp'), '<div class="mainwp-hidden">Themes Help</div>', 'read', 'ThemesHelp', array(MainWPThemes::getClassName(), 'QSGManageThemes'));
@@ -45,8 +45,10 @@ class MainWPThemes
                 <div class="mainwp_boxout">
                     <div class="mainwp_boxoutin"></div>
                     <a href="<?php echo admin_url('admin.php?page=ThemesManage'); ?>" class="mainwp-submenu"><?php _e('Manage Themes','mainwp'); ?></a>
+                    <?php if (mainwp_current_user_can("dashboard", "install_themes")) { ?>
                     <a href="<?php echo admin_url('admin.php?page=ThemesInstall'); ?>" class="mainwp-submenu"><?php _e('Install','mainwp'); ?></a>
-                    <a href="<?php echo admin_url('admin.php?page=ThemesAutoUpdate'); ?>" class="mainwp-submenu"><?php _e('Auto Update Trust','mainwp'); ?></a>
+                    <?php } ?>
+                    <a href="<?php echo admin_url('admin.php?page=ThemesAutoUpdate'); ?>" class="mainwp-submenu"><?php _e('Auto Updates','mainwp'); ?></a>
                     <a href="<?php echo admin_url('admin.php?page=ThemesIgnore'); ?>" class="mainwp-submenu"><?php _e('Ignored Updates','mainwp'); ?></a>
                     <a href="<?php echo admin_url('admin.php?page=ThemesIgnoredConflicts'); ?>" class="mainwp-submenu"><?php _e('Ignored Conflicts','mainwp'); ?></a>
                     <?php
@@ -70,13 +72,23 @@ class MainWPThemes
     {
         ?>
     <div class="wrap">
-        <a href="http://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP" /></a>
+        <a href="https://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP" /></a>
         <img src="<?php echo plugins_url('images/icons/mainwp-themes.png', dirname(__FILE__)); ?>" style="float: left; margin-right: 8px; margin-top: 7px ;" alt="MainWP Themes" height="32"/>
         <h2><?php _e('Themes','mainwp'); ?></h2><div style="clear: both;"></div><br/>
+         <div id="mainwp-tip-zone">
+          <?php if ($shownPage == 'Manage') { ?> 
+                <div class="mainwp-tips mainwp_info-box-blue"><span class="mainwp-tip"><strong><?php _e('MainWP Tip','mainwp'); ?>: </strong><?php _e('You can also quickly activate and deactivate installed Themes for a single site from your Individual Site Dashboard Theme widget by visiting Sites &rarr; Manage Sites &rarr; Child Site &rarr; Dashboard.','mainwp'); ?></span><span><a href="#" class="mainwp-dismiss" ><?php _e('Dismiss','mainwp'); ?></a></span></div>
+          <?php } ?>
+          <?php if ($shownPage == 'Install') { ?> 
+                <div class="mainwp-tips mainwp_info-box-blue"><span class="mainwp-tip"><strong><?php _e('MainWP Tip','mainwp'); ?>: </strong><?php _e('If you check the “Overwrite Existing” option while installing a theme you can easily update or rollback the theme on your child sites.','mainwp'); ?></span><span><a href="#" class="mainwp-dismiss" ><?php _e('Dismiss','mainwp'); ?></a></span></div>
+          <?php } ?>
+        </div>
         <div class="mainwp-tabs" id="mainwp-tabs">
             <a class="nav-tab pos-nav-tab <?php if ($shownPage == 'Manage') { echo "nav-tab-active"; } ?>" href="admin.php?page=ThemesManage"><?php _e('Manage','mainwp'); ?></a>
+            <?php if (mainwp_current_user_can("dashboard", "install_themes")) { ?>
             <a class="nav-tab pos-nav-tab <?php if ($shownPage == 'Install') { echo "nav-tab-active"; } ?>" href="admin.php?page=ThemesInstall"><?php _e('Install','mainwp'); ?></a>
-            <a class="nav-tab pos-nav-tab <?php if ($shownPage == 'AutoUpdate') { echo "nav-tab-active"; } ?>" href="admin.php?page=ThemesAutoUpdate"><?php _e('Auto Update Trust','mainwp'); ?></a>
+            <?php } ?>
+            <a class="nav-tab pos-nav-tab <?php if ($shownPage == 'AutoUpdate') { echo "nav-tab-active"; } ?>" href="admin.php?page=ThemesAutoUpdate"><?php _e('Auto Updates','mainwp'); ?></a>
             <a class="nav-tab pos-nav-tab <?php if ($shownPage == 'Ignore') { echo "nav-tab-active"; } ?>" href="admin.php?page=ThemesIgnore"><?php _e('Ignored Updates','mainwp'); ?></a>
             <a class="nav-tab pos-nav-tab <?php if ($shownPage == 'IgnoredConflicts') { echo "nav-tab-active"; } ?>" href="admin.php?page=ThemesIgnoredConflicts"><?php _e('Ignored Conflicts','mainwp'); ?></a>
             <a style="float: right" class="mainwp-help-tab nav-tab pos-nav-tab <?php if ($shownPage === 'ThemesHelp') { echo "nav-tab-active"; } ?>" href="admin.php?page=ThemesHelp"><?php _e('Help','mainwp'); ?></a>
@@ -111,23 +123,28 @@ class MainWPThemes
             <div class="mainwp_info-box"><strong><?php _e('Use this to bulk (de)activate or delete themes. To add new themes click on the "Install" tab.','mainwp'); ?></strong></div>
         <br/>
         <div class="mainwp-search-form">
-            <?php MainWPUI::select_sites_box(__("Select Sites", 'mainwp'), 'checkbox', true, true, 'mainwp_select_sites_box_right'); ?>
-
-            <h3><?php _e('Search Themes','mainwp'); ?></h3>
+            <div class="postbox mainwp-postbox">
+            <h3 class="mainwp_box_title"><?php _e('Search Themes','mainwp'); ?></h3>
+            <div class="inside">
             <p>
                 <?php _e('Status:','mainwp'); ?><br />
                 <select name="mainwp_theme_search_by_status" id="mainwp_theme_search_by_status">
+                    <option value="all" <?php if ($cachedSearch != null && $cachedSearch['the_status'] == 'all') { echo 'selected'; } ?>><?php _e('All Themes','mainwp'); ?></option>
                     <option value="active" <?php if ($cachedSearch != null && $cachedSearch['the_status'] == 'active') { echo 'selected'; } ?>><?php _e('Active','mainwp'); ?></option>
                     <option value="inactive" <?php if ($cachedSearch != null && $cachedSearch['the_status'] == 'inactive') { echo 'selected'; } ?>><?php _e('Inactive','mainwp'); ?></option>
                 </select>
             </p>
             <p>
                 <?php _e('Containing Keyword:','mainwp'); ?><br/>
-                <input type="text" id="mainwp_theme_search_by_keyword" size="50" value="<?php if ($cachedSearch != null) { echo $cachedSearch['keyword']; } ?>"/>
+                <input type="text" id="mainwp_theme_search_by_keyword" class="mainwp-field mainwp-keyword"  size="50" value="<?php if ($cachedSearch != null) { echo $cachedSearch['keyword']; } ?>"/>
             </p>
-            <p>&nbsp;</p>
+             </div>
+            </div>
+            <?php MainWPUI::select_sites_box(__("Select Sites", 'mainwp'), 'checkbox', true, true, 'mainwp_select_sites_box_left'); ?>
+            <div style="clear: both;"></div>
             <input type="button" name="mainwp_show_themes" id="mainwp_show_themes" class="button-primary" value="<?php _e('Show Themes','mainwp'); ?>"/>
             <span id="mainwp_themes_loading">&nbsp;<em><?php _e('Grabbing information from Child Sites','mainwp') ?></em>&nbsp;&nbsp;<img src="<?php echo plugins_url('images/loader.gif', dirname(__FILE__)); ?>"/></span> <span id="mainwp_themes_loading_info"><?php _e('Automatically refreshing to get up to date information.','mainwp'); ?></span>
+            <br/><br/>
         </div>
         <div class="clear"></div>
 
@@ -160,7 +177,14 @@ class MainWPThemes
                         $allThemes = json_decode($website->themes, true);
                         for ($i = 0; $i < count($allThemes); $i++) {
                             $theme = $allThemes[$i];
-                            if ($theme['active'] != (($status == 'active') ? 1 : 0)) continue;
+                            
+                            if ($status == "active" || $status == "inactive") {
+                                if ($theme['active'] == 1 && $status !== "active")
+                                    continue;
+                                else if ($theme['active'] != 1 && $status !== "inactive")
+                                    continue;
+                            }
+                                
                             if ($keyword != '' && !stristr($theme['title'], $keyword)) continue;
 
                             $theme['websiteid'] = $website->id;
@@ -181,7 +205,12 @@ class MainWPThemes
                             $allThemes = json_decode($website->themes, true);
                             for ($i = 0; $i < count($allThemes); $i++) {
                                 $theme = $allThemes[$i];
-                                if ($theme['active'] != (($status == 'active') ? 1 : 0)) continue;
+                                if ($status == "active" || $status == "inactive") {
+                                    if ($theme['active'] == 1 && $status !== "active")
+                                        continue;
+                                    else if ($theme['active'] != 1 && $status !== "inactive")
+                                        continue;
+                                }
                                 if ($keyword != '' && !stristr($theme['title'], $keyword)) continue;
 
                                 $theme['websiteid'] = $website->id;
@@ -224,9 +253,17 @@ class MainWPThemes
             }
 
             $post_data = array(
-                'keyword' => $keyword,
-                'status' => $status
+                'keyword' => $keyword                
             );
+            
+            if ($status == "active" || $status == "inactive") {
+                $post_data['status'] = $status;
+                $post_data['filter'] = true;
+            } else {
+                $post_data['status'] = "";
+                $post_data['filter'] = false;
+            }
+                
             MainWPUtility::fetchUrlsAuthed($dbwebsites, 'get_all_themes', $post_data, array(MainWPThemes::getClassName(), 'ThemesSearch_handler'), $output);
 
             if (count($output->errors) > 0)
@@ -248,16 +285,25 @@ class MainWPThemes
 
         ob_start();
         ?>
-    <?php if ($status == 'inactive') { ?>
+   
     <div class="alignleft">
         <select name="bulk_action" id="mainwp_bulk_action">
             <option value="none"><?php _e('Choose Action','mainwp'); ?></option>
-            <option value="activate"><?php _e('Activate','mainwp'); ?></option>
-            <option value="delete"><?php _e('Delete','mainwp'); ?></option>
+             <?php if ($status == 'inactive') { ?>
+                <?php if (mainwp_current_user_can("dashboard", "activate_themes")) { ?>
+                    <option value="activate"><?php _e('Activate','mainwp'); ?></option>
+                <?php } ?>
+                <?php if (mainwp_current_user_can("dashboard", "delete_themes")) { ?>    
+                    <option value="delete"><?php _e('Delete','mainwp'); ?></option>
+                <?php } ?>                
+            <?php } ?>
+            <?php if (mainwp_current_user_can("dashboard", "ignore_unignore_updates")) { ?>       
+                <option value="ignore_updates"><?php _e('Ignore Updates','mainwp'); ?></option>
+            <?php } ?>
         </select> <input type="button" name="" id="mainwp_bulk_theme_action_apply" class="button" value="<?php _e('Confirm','mainwp'); ?>"/> <span id="mainwp_bulk_action_loading"><img src="<?php echo plugins_url('images/loader.gif', dirname(__FILE__)); ?>"/></span>
     </div>
     <div class="clear"></div>
-    <?php } ?>
+    
 
 
     <?php
@@ -276,10 +322,11 @@ class MainWPThemes
         $siteThemes = array(); //site_id -> theme_version_name -> theme obj
         $themes = array(); //name_version -> name
         $themesVersion = array(); //name_version -> title_version
-        $themesRealVersion = array(); //name_version -> title_version
+        $themesRealVersion = $themesSlug = array(); //name_version -> title_version
         foreach ($output->themes as $theme) {
             $sites[$theme['websiteid']] = $theme['websiteurl'];
             $themes[$theme['name'] . '_' . $theme['version']] = $theme['name'];
+            $themesSlug[$theme['name'] . '_' . $theme['version']] = $theme['slug'];
             $themesVersion[$theme['name'] . '_' . $theme['version']] = $theme['title'] . ' ' . $theme['version'];
             $themesRealVersion[$theme['name'] . '_' . $theme['version']] = $theme['version'];
             if (!isset($siteThemes[$theme['websiteid']]) || !is_array($siteThemes[$theme['websiteid']])) $siteThemes[$theme['websiteid']] = array();
@@ -319,7 +366,7 @@ class MainWPThemes
                 foreach ($themesVersion as $theme_name => $theme_title) {
                     echo '<td style="text-align: center">';
                     if (isset($siteThemes[$site_id]) && isset($siteThemes[$site_id][$theme_name])) {
-                        echo '<input type="checkbox" value="' . $themes[$theme_name] . '" version="'.$themesRealVersion[$theme_name].'" class="selected_theme" />';
+                        echo '<input type="checkbox" value="' . $themes[$theme_name] . '" version="'.$themesRealVersion[$theme_name].'" slug="' . $themesSlug[$theme_name]. '" class="selected_theme" />';
                     }
                     echo '</td>';
                 }
@@ -338,8 +385,14 @@ class MainWPThemes
     }
     public static function renderAllThemesTable($output = null)
     {
+        $keyword = null;
+        $search_status = 'all';
         if ($output == null)
         {
+            $keyword = isset($_POST['keyword']) && !empty($_POST['keyword']) ? trim($_POST["keyword"]) : null;
+            $search_status = isset($_POST['status']) ? $_POST['status'] : "all";            
+            $search_theme_status = isset($_POST['theme_status']) ? $_POST['theme_status'] : "all";
+          
             $output = new stdClass();
             $output->errors = array();
             $output->themes = array();
@@ -354,9 +407,17 @@ class MainWPThemes
                 {
                     $allThemes = json_decode($website->themes, true);
                     for ($i = 0; $i < count($allThemes); $i++) {
-                        $theme = $allThemes[$i];
-                        if ($theme['active'] != 1) continue;
-
+                        $theme = $allThemes[$i];                        
+                        if ($search_theme_status != "all") {
+                            if ($theme['active'] == 1 && $search_theme_status !== "active")
+                                continue;
+                            else if ($theme['active'] != 1 && $search_theme_status !== "inactive")
+                                continue;
+                        }
+                        
+                        if ($keyword != '' && stristr($theme['name'], $keyword) === false) 
+                            continue;
+                        
                         $theme['websiteid'] = $website->id;
                         $theme['websiteurl'] = $website->url;
                         $output->themes[] = $theme;
@@ -377,9 +438,17 @@ class MainWPThemes
                 @MainWPDB::free_result($websites);
 
                 $post_data = array(
-                    'keyword' => '',
-                    'status' => 'active'
+                    'keyword' => $keyword                    
                 );
+                
+                if ($search_theme_status == "active" || $search_theme_status == "inactive") {
+                    $post_data['status'] = $search_theme_status;
+                    $post_data['filter'] = true;
+                } else {
+                    $post_data['status'] = "";
+                    $post_data['filter'] = false;
+                } 
+                
                 MainWPUtility::fetchUrlsAuthed($dbwebsites, 'get_all_themes', $post_data, array(MainWPThemes::getClassName(), 'ThemesSearch_handler'), $output);
 
                 if (count($output->errors) > 0)
@@ -401,10 +470,22 @@ class MainWPThemes
 
             if (session_id() == '') session_start();
             $_SESSION['SNThemesAll'] = $output;
+            $_SESSION['SNThemesAllStatus'] = array('keyword' => $keyword, 'status' => $search_status, 'theme_status' => $search_theme_status);
+        } else {
+            if (isset($_SESSION['SNThemesAllStatus'])) {
+                $keyword = $_SESSION['SNThemesAllStatus']['keyword'];
+                $search_status = $_SESSION['SNThemesAllStatus']['status'];
+                $search_theme_status = $_SESSION['SNThemesAllStatus']['theme_status'];                
+            }
         }
 
-
-        if (count($output->themes) == 0) return;
+       if (count($output->themes) == 0) {
+            ?>
+        No themes found
+        <?php
+            return;
+        }
+        
         ?>
     <div class="alignleft">
         <select name="bulk_action" id="mainwp_bulk_action">
@@ -414,20 +495,12 @@ class MainWPThemes
         </select> <input type="button" name="" id="mainwp_bulk_trust_themes_action_apply" class="button" value="<?php _e('Confirm','mainwp'); ?>"/> <span id="mainwp_bulk_action_loading"><img src="<?php echo plugins_url('images/loader.gif', dirname(__FILE__)); ?>"/></span>
     </div>
     <div class="clear"></div>
-
-
     <?php
-        if (count($output->themes) == 0) {
-            ?>
-        No themes found
-        <?php
-            return;
-        }
-
+        
         //Map per siteId
         $themes = array(); //name_version -> slug
         foreach ($output->themes as $theme) {
-            $themes[$theme['slug']] = $theme['name'];
+            $themes[$theme['slug']] = $theme;            
         }
         asort($themes);
 
@@ -447,6 +520,9 @@ class MainWPThemes
                 <th scope="col" id="theme" class="manage-column column-title sortable desc" style="">
                     <a href="#"><span><?php _e('Theme','mainwp'); ?></span><span class="sorting-indicator"></span></a>
                 </th>
+                 <th scope="col" id="thmstatus" class="manage-column column-title sortable desc" style="">
+                    <a href="#"><span><?php _e('Status','mainwp'); ?></span><span class="sorting-indicator"></span></a>
+                </th>
                 <th scope="col" id="trustlvl" class="manage-column column-title sortable desc" style="">
                     <a href="#"><span><?php _e('Trust Level','mainwp'); ?></span><span class="sorting-indicator"></span></a>
                 </th>
@@ -462,6 +538,7 @@ class MainWPThemes
                 <th scope="col" class="manage-column column-cb check-column" style=""><input name="themes" type="checkbox"></th>
                 <th scope="col" id="info_footer" class="manage-column column-cb check-column" style=""></th>
                 <th scope="col" id="theme_footer" class="manage-column column-title sortable desc" style=""><span><?php _e('Theme','mainwp'); ?></span></th>
+                <th scope="col" id="thmstatus_footer" class="manage-column column-posts" style=""><?php _e('Status','mainwp'); ?></th>
                 <th scope="col" id="trustlvl_footer" class="manage-column column-posts" style=""><?php _e('Trust Level','mainwp'); ?></th>
                 <th scope="col" id="ignoredstatus_footer" class="manage-column column-posts" style=""><?php _e('Ignored Status','mainwp'); ?></th>
                 <th scope="col" id="notes_footer" class="manage-column column-posts" style=""><?php _e('Notes','mainwp'); ?></th>
@@ -470,14 +547,26 @@ class MainWPThemes
 
             <tbody id="the-posts-list" class="list:posts">
                 <?php
-                    foreach ($themes as $slug => $name)
-                    {
+                    foreach ($themes as $slug => $theme)
+                    {         
+                        $name = $theme['name'];
+                        if (!empty($search_status) && $search_status != "all") {
+                            if ($search_status == "trust" && !in_array($slug, $trustedThemes))
+                                continue;
+                            else if ($search_status == "untrust" && in_array($slug, $trustedThemes))
+                                continue;
+                            else if ($search_status == "ignored" && !isset($decodedIgnoredThemes[$slug]))
+                                continue;
+                        }
                      ?>
                     <tr id="post-1" class="post-1 post type-post status-publish format-standard hentry category-uncategorized alternate iedit author-self" valign="top" theme_slug="<?php echo urlencode($slug); ?>" theme_name="<?php echo rawurlencode($name); ?>">
                         <th scope="row" class="check-column"><input type="checkbox" name="theme[]" value="<?php echo urlencode($slug); ?>"></th>
                         <td scope="col" id="info_content" class="manage-column" style=""> <?php if (isset($decodedIgnoredThemes[$slug])) { MainWPUtility::renderToolTip('Ignored themes will NOT be auto-updated.', null, 'images/icons/mainwp-red-info-16.png'); } ?></td>
                         <td scope="col" id="theme_content" class="manage-column sorted" style="">
                             <?php echo $name; ?>
+                        </td>
+                        <td scope="col" id="plgstatus_content" class="manage-column" style="">
+                            <?php echo ($theme['active'] == 1) ? __("Active", "mainwp") : __("Inactive", "mainwp"); ?>
                         </td>
                         <td scope="col" id="trustlvl_content" class="manage-column" style="">
                             <?php
@@ -601,11 +690,42 @@ class MainWPThemes
         die($information['out']);
     }
 
+     public static function ignoreUpdates()
+    {
+        $websiteIdEnc = $_POST['websiteId'];
+
+        $websiteId = $websiteIdEnc;
+        if (!MainWPUtility::ctype_digit($websiteId)) die('FAIL');
+
+        $website = MainWPDB::Instance()->getWebsiteById($websiteId);
+        if (!MainWPUtility::can_edit_website($website)) die('FAIL');
+
+        $themes = $_POST['themes'];  
+        $names = $_POST['names'];  
+        
+        $decodedIgnoredThemes = json_decode($website->ignored_themes, true);
+        if (!is_array($decodedIgnoredThemes)) $decodedIgnoredThemes = array();  
+                    
+        if (is_array($themes)) {
+            for($i = 0; $i < count($themes); $i++) {
+                $slug = $themes[$i];
+                $name = $names[$i];
+                if (!isset($decodedIgnoredThemes[$slug]))
+                {
+                    $decodedIgnoredThemes[$slug] = urldecode($name);
+                }
+            }
+            MainWPDB::Instance()->updateWebsiteValues($website->id, array('ignored_themes' => json_encode($decodedIgnoredThemes)));
+        }
+        
+        die(json_encode(array('result' => true)));
+    }
+    
     //@see MainWPInstallBulk
     public static function renderInstall()
     {
         self::renderHeader('Install');
-        MainWPInstallBulk::render('Themes');
+        MainWPInstallBulk::render('Themes', 'theme');
         self::renderFooter('Install');
     }
 
@@ -662,7 +782,7 @@ class MainWPThemes
                         <span class='action-links'>
 
                                     <a href="" class="thickbox thickbox-preview onclick"
-                                       id="install-theme-<?php echo $theme->slug; ?>" title="Install â€œ<?php echo $name; ?>??">Install</a> |
+                                       id="install-theme-<?php echo $theme->slug; ?>" title="Install '<?php echo $name; ?>'">Install</a> |
                                     <a href="<?php echo $preview_link; ?>" target="_blank"
                                        class="thickbox thickbox-preview onclick previewlink"
                                        title="Preview '<?php echo $name; ?>'">Preview</a>
@@ -719,43 +839,70 @@ class MainWPThemes
 
     public static function renderAutoUpdate()
     {
+        $cachedThemesSearch = null;
+        if (isset($_SESSION['SNThemesAllStatus'])) {
+            $cachedThemesSearch = $_SESSION['SNThemesAllStatus'];          
+        }         
         self::renderHeader('AutoUpdate');
-
-        $snAutomaticDailyUpdate = get_option('mainwp_automaticDailyUpdate');
-        ?>
-        <h2><?php _e('Theme Automatic Update Trust List','mainwp'); ?></h2>
-        <br />
-        <div id="mainwp-au" class=""><strong><?php if ($snAutomaticDailyUpdate == 1) { ?>
-            <div class="mainwp-au-on"><?php _e('Auto Updates are ON and Trusted Plugins will be Automatically Updated','mainwp'); ?> - <a href="<?php echo admin_url(); ?>admin.php?page=Settings"><?php _e('Change this in Settings','mainwp'); ?></a></div>
-        <?php } elseif (($snAutomaticDailyUpdate === false) || ($snAutomaticDailyUpdate == 2)) { ?>
-            <div class="mainwp-au-email"><?php _e('Auto Updates are OFF - Email Update Notification is ON','mainwp'); ?> - <a href="<?php echo admin_url(); ?>admin.php?page=Settings"><?php _e('Change this in Settings','mainwp'); ?></a></div>
-        <?php } else { ?>
-            <div class="mainwp-au-off"><?php _e('Auto Updates are OFF - Email Update Notification is OFF','mainwp'); ?> - <a href="<?php echo admin_url(); ?>admin.php?page=Settings"><?php _e('Change this in Settings','mainwp'); ?></a></div>
-        <?php } ?></strong></div>
-        <div class="mainwp_info-box"><?php _e('Only mark Themes as Trusted if you are absolutely sure they can be updated','mainwp'); ?></div>
-
-        <a href="#" class="button-primary" id="mainwp_show_all_themes"><?php _e('Show Themes','mainwp'); ?></a>
-        <span id="mainwp_themes_loading"><img src="<?php echo plugins_url('images/loader.gif', dirname(__FILE__)); ?>"/></span>
-
-
-        <div id="mainwp_themes_main" style="display: block; margin-top: 1.5em ;">
-            <div id="mainwp_themes_content">
-            <?php
-                if (session_id() == '') session_start();
-                if (isset($_SESSION['SNThemesAll'])) {
-                    self::renderAllThemesTable($_SESSION['SNThemesAll']);
-                    echo '<script>mainwp_themes_all_table_reinit();</script>';
-                }
+        if (!mainwp_current_user_can("dashboard", "trust_untrust_updates")) {
+            mainwp_do_not_have_permissions("Trust/Untrust updates");
+            return;
+        } else {
+            $snAutomaticDailyUpdate = get_option('mainwp_automaticDailyUpdate');
             ?>
+            <h2><?php _e('Theme Automatic Update Trust List','mainwp'); ?></h2>
+            <br />
+            <div id="mainwp-au" class=""><strong><?php if ($snAutomaticDailyUpdate == 1) { ?>
+                <div class="mainwp-au-on"><?php _e('Auto Updates are ON and Trusted Plugins will be Automatically Updated','mainwp'); ?> - <a href="<?php echo admin_url(); ?>admin.php?page=Settings"><?php _e('Change this in Settings','mainwp'); ?></a></div>
+            <?php } elseif (($snAutomaticDailyUpdate === false) || ($snAutomaticDailyUpdate == 2)) { ?>
+                <div class="mainwp-au-email"><?php _e('Auto Updates are OFF - Email Update Notification is ON','mainwp'); ?> - <a href="<?php echo admin_url(); ?>admin.php?page=Settings"><?php _e('Change this in Settings','mainwp'); ?></a></div>
+            <?php } else { ?>
+                <div class="mainwp-au-off"><?php _e('Auto Updates are OFF - Email Update Notification is OFF','mainwp'); ?> - <a href="<?php echo admin_url(); ?>admin.php?page=Settings"><?php _e('Change this in Settings','mainwp'); ?></a></div>
+            <?php } ?></strong></div>
+            <div class="mainwp_info-box"><?php _e('Only mark Themes as Trusted if you are absolutely sure they can be updated','mainwp'); ?></div>
+
+            <div class="postbox">
+                <h3 class="mainwp_box_title"><?php _e('Search Themes','mainwp'); ?></h3>
+                <div class="inside">
+                            <span><?php _e("Status:", "mainwp"); ?> </span>
+                                <select id="mainwp_au_theme_status">
+                                    <option value="all" <?php if ($cachedThemesSearch != null && $cachedThemesSearch['theme_status'] == 'all') { echo 'selected'; } ?>><?php _e('All Themes','mainwp'); ?></option>
+                                    <option value="active" <?php if ($cachedThemesSearch != null && $cachedThemesSearch['theme_status'] == 'active') { echo 'selected'; } ?>><?php _e('Active Themes','mainwp'); ?></option>
+                                    <option value="inactive" <?php if ($cachedThemesSearch != null && $cachedThemesSearch['theme_status'] == 'inactive') { echo 'selected'; } ?>><?php _e('Inactive Themes','mainwp'); ?></option>                        
+                                </select>&nbsp;&nbsp;
+                            <span><?php _e("Trust Status:", "mainwp"); ?> </span>
+                            <select id="mainwp_au_theme_trust_status">
+                                <option value="all" <?php if ($cachedThemesSearch != null && $cachedThemesSearch['status'] == 'all') { echo 'selected'; } ?>><?php _e('All Themes','mainwp'); ?></option>
+                                <option value="trust" <?php if ($cachedThemesSearch != null && $cachedThemesSearch['status'] == 'trust') { echo 'selected'; } ?>><?php _e('Trusted Themes','mainwp'); ?></option>
+                                <option value="untrust" <?php if ($cachedThemesSearch != null && $cachedThemesSearch['status'] == 'untrust') { echo 'selected'; } ?>><?php _e('Not Trusted Themes','mainwp'); ?></option>
+                                <option value="ignored" <?php if ($cachedThemesSearch != null && $cachedThemesSearch['status'] == 'ignored') { echo 'selected'; } ?>><?php _e('Ignored Themes','mainwp'); ?></option>
+                            </select>&nbsp;&nbsp;
+                        <span><?php _e("Containing Keywords:", "mainwp"); ?> </span>
+                        <input type="text" class="mainwp-field mainwp-keyword" id="mainwp_au_theme_keyword" style="width: 350px;" value="<?php echo ($cachedThemesSearch !== null) ? $cachedThemesSearch['keyword'] : "";?>">&nbsp;&nbsp;
+                        <a href="#" class="button-primary" id="mainwp_show_all_themes"><?php _e('Show Themes','mainwp'); ?></a>
+                        <span id="mainwp_themes_loading"><img src="<?php echo plugins_url('images/loader.gif', dirname(__FILE__)); ?>"/></span>
+                </div>
             </div>
-        </div>
-        <?php
+
+
+            <div id="mainwp_themes_main" style="display: block; margin-top: 1.5em ;">
+                <div id="mainwp_themes_content">
+                <?php
+                    if (session_id() == '') session_start();
+                    if (isset($_SESSION['SNThemesAll'])) {
+                        self::renderAllThemesTable($_SESSION['SNThemesAll']);
+                        echo '<script>mainwp_themes_all_table_reinit();</script>';
+                    }
+                ?>
+                </div>
+            </div>
+            <?php
+        }
         self::renderFooter('AutoUpdate');
     }
 
     public static function renderIgnoredConflicts()
     {
-        //todo: only fetch sites with ignored conflicts
         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
         $userExtension = MainWPDB::Instance()->getUserExtension();
         $decodedIgnoredThemeConflicts = json_decode($userExtension->ignored_themeConflicts, true);
@@ -763,7 +910,7 @@ class MainWPThemes
 
         $cnt = 0;
         while ($websites && ($website = @MainWPDB::fetch_object($websites)))
-        {
+        {            
             $tmpDecodedIgnoredThemeConflicts = json_decode($website->ignored_themeConflicts, true);
             if (!is_array($tmpDecodedIgnoredThemeConflicts) || count($tmpDecodedIgnoredThemeConflicts) == 0) continue;
             $cnt++;
@@ -836,7 +983,7 @@ class MainWPThemes
                     <tr site_id="<?php echo $website->id; ?>" theme="<?php echo urlencode($ignoredThemeConflictName); ?>">
                         <td>
                             <span class="websitename" <?php if (!$first) { echo 'style="display: none;"'; } else { $first = false; }?>>
-                                <?php echo $website->name; ?>
+                                <a href="<?php echo admin_url('admin.php?page=managesites&dashboard=' . $website->id); ?>"><?php echo $website->name; ?></a>
                             </span>
                         </td>
                         <td>
@@ -874,6 +1021,7 @@ class MainWPThemes
         $cnt = 0;
         while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
+            if ($website->is_ignoreThemeUpdates) continue;
             $tmpDecodedIgnoredThemes = json_decode($website->ignored_themes, true);
             if (!is_array($tmpDecodedIgnoredThemes) || count($tmpDecodedIgnoredThemes) == 0) continue;
             $cnt++;
@@ -904,7 +1052,9 @@ class MainWPThemes
                              <strong><?php echo $ignoredThemeName; ?></strong> (<?php echo $ignoredTheme; ?>)
                          </td>
                         <td style="text-align: right; padding-right: 30px">
+                            <?php if (mainwp_current_user_can("dashboard", "ignore_unignore_updates")) { ?>
                             <a href="#" onClick="return rightnow_themes_unignore_globally('<?php echo urlencode($ignoredTheme); ?>')"><?php _e('ALLOW','mainwp'); ?></a>
+                            <?php } ?>
                         </td>
                     </tr>
                 <?php
@@ -928,7 +1078,7 @@ class MainWPThemes
             <tr>
                 <th scope="col" class="manage-column" style="width: 250px"><?php _e('Site','mainwp'); ?></th>
                 <th scope="col" class="manage-column" style="width: 400px"><?php _e('Themes','mainwp'); ?></th>
-                <th scope="col" class="manage-column" style="text-align: right; padding-right: 10px"><?php if ($cnt > 0) { ?><a href="#" class="button-primary mainwp-unignore-detail-all" onClick="return rightnow_themes_unignore_detail_all();"><?php _e('Allow All','mainwp'); ?></a><?php } ?></th>
+                <th scope="col" class="manage-column" style="text-align: right; padding-right: 10px"><?php if (mainwp_current_user_can("dashboard", "ignore_unignore_updates")) { if ($cnt > 0) { ?><a href="#" class="button-primary mainwp-unignore-detail-all" onClick="return rightnow_themes_unignore_detail_all();"><?php _e('Allow All','mainwp'); ?></a><?php } } ?></th>
             </tr>
         </thead>
         <tbody id="ignored-themes-list" class="list:sites">
@@ -938,6 +1088,8 @@ class MainWPThemes
             @MainWPDB::data_seek($websites, 0);
             while ($websites && ($website = @MainWPDB::fetch_object($websites)))
             {
+               if ($website->is_ignoreThemeUpdates) continue;
+                
                $decodedIgnoredThemes = json_decode($website->ignored_themes, true);
                if (!is_array($decodedIgnoredThemes) || count($decodedIgnoredThemes) == 0) continue;
                $first = true;
@@ -947,14 +1099,16 @@ class MainWPThemes
                <tr site_id="<?php echo $website->id; ?>" theme_slug="<?php echo urlencode($ignoredTheme); ?>">
                    <td>
                        <span class="websitename" <?php if (!$first) { echo 'style="display: none;"'; } else { $first = false; }?>>
-                           <?php echo $website->name; ?>
+                           <a href="<?php echo admin_url('admin.php?page=managesites&dashboard=' . $website->id); ?>"><?php echo $website->name; ?></a>
                        </span>
                    </td>
                    <td>
                        <strong><?php echo $ignoredThemeName; ?></strong> (<?php echo $ignoredTheme; ?>)
                    </td>
                    <td style="text-align: right; padding-right: 30px">
-                       <a href="#" onClick="return rightnow_themes_unignore_detail('<?php echo urlencode($ignoredTheme); ?>', <?php echo $website->id; ?>)"><?php _e('ALLOW','mainwp'); ?></a>
+                        <?php if (mainwp_current_user_can("dashboard", "ignore_unignore_updates")) { ?>
+                        <a href="#" onClick="return rightnow_themes_unignore_detail('<?php echo urlencode($ignoredTheme); ?>', <?php echo $website->id; ?>)"><?php _e('ALLOW','mainwp'); ?></a>
+                        <?php } ?>
                    </td>
                </tr>
                  <?php
@@ -1116,7 +1270,7 @@ class MainWPThemes
                                         Click the Upload toggle Button
                                     </li>
                                     <li>
-                                        Click â€œUpload Nowâ€ button<br/><br/>
+                                        Click 'Upload Now' button<br/><br/>
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/05/new-theme-upload.jpg" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                     <li>
@@ -1126,7 +1280,7 @@ class MainWPThemes
                                         Select sites you want to install the themes
                                     </li>
                                     <li>
-                                        Click â€œInstall Nowâ€ button
+                                        Click 'Install Now' button
                                     </li>
                                 </ol>
                             </p>
@@ -1139,10 +1293,10 @@ class MainWPThemes
                                         Go to main MainWP Dashboard
                                     </li>
                                     <li>
-                                        Locate your â€œRight Nowâ€ Widget
+                                        Locate your 'Right Now' Widget
                                     </li>
                                     <li>
-                                        Click â€œShowâ€ on in â€œTheme Upgrades Availableâ€ area <br/><br/>
+                                        Click 'Show' on 'Theme Upgrades Available' area <br/><br/>
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/05/new-available-themes.jpg" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                     <li>
@@ -1150,7 +1304,7 @@ class MainWPThemes
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/05/new-available-themes-show.jpg" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                     <li>
-                                        Select â€œUpgradeâ€ next to the name of the theme or â€œUpgrade Allâ€ to upgrade all themes on the site <br/><br/>
+                                        Select 'Upgrade' next to the name of the theme or 'Upgrade All' to upgrade all themes on the site <br/><br/>
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/05/new-available-themes-upgrade.jpg" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                 </ol>
@@ -1164,17 +1318,17 @@ class MainWPThemes
                                         Go to main MainWP Dashboard
                                     </li>
                                     <li>
-                                        Locate your â€œRight Nowâ€ Widget
+                                        Locate your 'Right Now' Widget
                                     </li>
                                     <li>
-                                        Click â€œShowâ€ on in â€œTheme Upgrades Availableâ€ area <br/><br/>
+                                        Click 'Show' on 'Theme Upgrades Available' area <br/><br/>
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/05/new-available-themes.jpg" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                     <li>
                                         Click the middle upgrades link to show the drop down of the available upgrades for that site
                                     </li>
                                     <li>
-                                        Click â€œIgnoreâ€ next to the name of the theme<br/><br/>
+                                        Click 'Ignore' next to the name of the theme<br/><br/>
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/05/new-plugin-ignore.jpg" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                 </ol>

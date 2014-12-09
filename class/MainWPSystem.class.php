@@ -147,7 +147,9 @@ class MainWPSystem
         //MainWPAjax::Instance();
 
         MainWPInstallBulk::init();
-
+    
+        do_action('mainwp_cronload_action');      
+        
         //Cron every 5 minutes
         add_action('mainwp_cronofflinecheck_action', array($this, 'mainwp_cronofflinecheck_action'));
         add_action('mainwp_cronstats_action', array($this, 'mainwp_cronstats_action'));
@@ -234,13 +236,16 @@ class MainWPSystem
         add_filter('mainwp-activated-check', array(&$this, 'activated_check'));
         add_filter('mainwp-activated-sub-check', array(&$this, 'activated_sub_check'));
         add_filter('mainwp-extension-enabled-check', array(MainWPExtensions::getClassName(), 'isExtensionEnabled'));
-        add_filter('mainwp-getsites', array(MainWPExtensions::getClassName(), 'hookGetSites'), 10, 3);
+        add_filter('mainwp-getsites', array(MainWPExtensions::getClassName(), 'hookGetSites'), 10, 4);
         add_filter('mainwp-getdbsites', array(MainWPExtensions::getClassName(), 'hookGetDBSites'), 10, 5);
-        add_filter('mainwp-getgroups', array(MainWPExtensions::getClassName(), 'hookGetGroups'), 10, 3);
+        add_filter('mainwp-getgroups', array(MainWPExtensions::getClassName(), 'hookGetGroups'), 10, 4);
         add_action('mainwp_fetchurlsauthed', array(&$this, 'filter_fetchUrlsAuthed'), 10, 7);
         add_filter('mainwp_fetchurlauthed', array(&$this, 'filter_fetchUrlAuthed'), 10, 5);
         add_filter('mainwp_getdashboardsites', array(MainWPExtensions::getClassName(), 'hookGetDashboardSites'), 10, 7);
-
+        add_filter('mainwp-manager-getextensions', array(MainWPExtensions::getClassName(), 'hookManagerGetExtensions'));        
+        add_action('mainwp_bulkpost_metabox_handle', array($this, 'hookBulkPostMetaboxHandle'));
+        add_action('mainwp_bulkpage_metabox_handle', array($this, 'hookBulkPageMetaboxHandle'));       
+        
         $this->posthandler = new MainWPPostHandler();
 
         do_action('mainwp-activated');
@@ -265,12 +270,25 @@ class MainWPSystem
        return MainWPExtensions::hookFetchUrlAuthed($pluginFile, $key, $websiteId, $what, $params);
     }
 
+    function hookBulkPostMetaboxHandle($post_id, $output) {
+        $output = $this->metaboxes->select_sites_handle($post_id, 'bulkpost');        
+        $this->metaboxes->add_categories_handle($post_id, 'bulkpost');      
+        $this->metaboxes->add_tags_handle($post_id, 'bulkpost');
+        $this->metaboxes->add_slug_handle($post_id, 'bulkpost');    
+        MainWPPost::add_sticky_handle($post_id);
+    }
+    
+    function hookBulkPageMetaboxHandle($post_id, $output) {
+        $output = $this->metaboxes->select_sites_handle($post_id, 'bulkpage');        
+        $this->metaboxes->add_slug_handle($post_id, 'bulkpage');
+    }
+    
     public function in_plugin_update_message($plugin_data, $r)
     {
-        if (empty($r) || !is_object($r)) return;
+        if (empty($r) || !is_object($r)) return;        
 
         if (property_exists($r, 'key_status') && $r->key_status == 'NOK') echo '<br />Your Log-in and Password are invalid, please update your login settings <a href="'.admin_url('admin.php?page=Settings').'">here</a>.';
-        else if (property_exists($r, 'package') && empty($r->package)) echo '<br />Your update license has expired, please log into <a href="http://mainwp.com/member">the members area</a> and upgrade your support and update license.';
+        else if (property_exists($r, 'package') && empty($r->package)) echo '<br />Your update license has expired, please log into <a href="https://mainwp.com/member">the members area</a> and upgrade your support and update license.';
     }
 
     public function localization()
@@ -301,8 +319,21 @@ class MainWPSystem
 
         echo '<div id="message" class="mainwp-api-message-invalid updated fade" style="' . (true || $this->isAPIValid() ? 'display: none;' : '') . '"><p><strong>MainWP needs to be activated before using - <a href="' . admin_url() . 'admin.php?page=Settings">Activate Here</a>.</strong></p></div>';
 
-        if (MainWPDB::Instance()->getWebsitesCount() == 0)
-            echo '<div id="message" class="mainwp-api-message-valid updated fade"><p><strong>MainWP is almost ready. Please <a href="' . admin_url() . 'admin.php?page=managesites&do=new">enter your first site</a>.</strong></p></div>';
+        if (MainWPDB::Instance()->getWebsitesCount() == 0) {
+            echo '<div id="message" class="mainwp-api-message-valid updated fade"><p><strong>MainWP is almost ready. Please <a href="' . admin_url() . 'admin.php?page=managesites&do=new">enter your first site</a>.</strong></p></div>';            
+            update_option('mainwp_first_site_events_notice', 'yes');
+        } else {
+            if (get_option('mainwp_first_site_events_notice') == 'yes') { 
+                ?>
+                <div id="mainwp-events-notice" class="updated fade">
+                	<p>
+                    	<span style="float: right;" ><a id="mainwp-events-notice-dismiss" style="text-decoration: none;" href="#"><?php _e('Dismiss','mainwp'); ?></a></span><span><strong><?php _e('Warning: Your setup is almost complete we recommend following the directions in the following help doc to be sure your scheduled events occur as expected <a href="http://docs.mainwp.com/backups-scheduled-events-occurring/">Scheduled Events</a>'); ?></strong></span>
+                    	</p>
+                </div>                    
+                <?php
+            }
+        }
+        
     }
 
     public function getVersion()
@@ -347,7 +378,7 @@ class MainWPSystem
     private function checkUpgrade()
     {
         $result = MainWPAPISettings::checkUpgrade();
-        if ($result == null) return;
+        if ($result == null) return;        
 
         $this->upgradeVersionInfo->result = $result;
         $this->upgradeVersionInfo->updated = time();
@@ -394,13 +425,23 @@ class MainWPSystem
             return false;
         }
 
-        $slugs = MainWPExtensions::getSlugs();
+        //$slugs = MainWPExtensions::getSlugs();
+        $result = MainWPExtensions::getSlugsTwo();
+        $slugs = $result['slugs'];
+        $am_slugs = $result['am_slugs'];
+        
         if ($slugs != '')
-        {
+        {           
             $slugs = explode(',', $slugs);
             if (in_array($arg->slug, $slugs)) return MainWPAPISettings::getUpgradeInformation($arg->slug);
         }
-
+        
+        if ($am_slugs != '')
+        {   
+            $am_slugs = explode(',', $am_slugs);            
+            if (in_array($arg->slug, $am_slugs)) return MainWPAPISettings::getPluginInformation($arg->slug);
+        }
+        
         return false;
     }
 
@@ -457,7 +498,7 @@ class MainWPSystem
                 'dtsAutomaticSyncStart' => time()
             );
 
-            MainWPDB::Instance()->updateWebsiteValues($website->id, $websiteValues);
+            MainWPDB::Instance()->updateWebsiteSyncValues($website->id, $websiteValues);
         }
 
         if (count($websites) == 0)
@@ -597,7 +638,6 @@ class MainWPSystem
                 if ($mainwpAutomaticDailyUpdate !== false && $mainwpAutomaticDailyUpdate != 0)
                 {
                     //Create a nice email to send
-                    //todo: RS: make this email global, not per user, or per user & allow better support for this
                     $email = get_option('mainwp_updatescheck_mail_email');
                     if ($email != false && $email != '') {
                         $mail = '<div>We noticed the following updates are available on your MainWP Dashboard. (<a href="'.site_url().'">'.site_url().'</a>)</div>
@@ -673,15 +713,15 @@ class MainWPSystem
                         'dtsAutomaticSync' => time()
                     );
 
-                    MainWPDB::Instance()->updateWebsiteValues($website->id, $websiteValues);
+                    MainWPDB::Instance()->updateWebsiteSyncValues($website->id, $websiteValues);
 
                     continue;
                 }
                 $website = MainWPDB::Instance()->getWebsiteById($website->id);
 
                 /** Check core upgrades **/
-                $websiteLastCoreUpgrades = json_decode($website->last_wp_upgrades, true);
-                $websiteCoreUpgrades = json_decode($website->wp_upgrades, true);
+                $websiteLastCoreUpgrades = json_decode(MainWPDB::Instance()->getWebsiteOption($website, 'last_wp_upgrades'), true);
+                $websiteCoreUpgrades = json_decode(MainWPDB::Instance()->getWebsiteOption($website, 'wp_upgrades'), true);
 
                 //Run over every update we had last time..
                 if (isset($websiteCoreUpgrades['current']))
@@ -717,14 +757,14 @@ class MainWPSystem
                 }
 
                 /** Check plugins **/
-                $websiteLastPlugins = json_decode($website->last_plugin_upgrades, true);
+                $websiteLastPlugins = json_decode(MainWPDB::Instance()->getWebsiteOption($website, 'last_plugin_upgrades'), true);
                 $websitePlugins = json_decode($website->plugin_upgrades, true);
 
                 /** Check themes **/
-                $websiteLastThemes = json_decode($website->last_theme_upgrades, true);
+                $websiteLastThemes = json_decode(MainWPDB::Instance()->getWebsiteOption($website, 'last_theme_upgrades'), true);
                 $websiteThemes = json_decode($website->theme_upgrades, true);
 
-                $decodedPremiumUpgrades = json_decode($website->premium_upgrades, true);
+                $decodedPremiumUpgrades = json_decode(MainWPDB::Instance()->getWebsiteOption($website, 'premium_upgrades'), true);
                 if (is_array($decodedPremiumUpgrades))
                 {
                     foreach ($decodedPremiumUpgrades as $slug => $premiumUpgrade)
@@ -854,17 +894,13 @@ class MainWPSystem
                 }
 
                 //Loop over last plugins & current plugins, check if we need to upgrade them..
-                $websiteValues = array(
-                    'dtsAutomaticSync' => time(),
-                    'last_plugin_upgrades' => $website->plugin_upgrades,
-                    'last_theme_upgrades' => $website->theme_upgrades,
-                    'last_wp_upgrades' => $website->wp_upgrades
-                );
-
                 $user = get_userdata($website->userid);
                 $email = MainWPUtility::getNotificationEmail($user);
                 MainWPUtility::update_option('mainwp_updatescheck_mail_email', $email);
-                MainWPDB::Instance()->updateWebsiteValues($website->id, $websiteValues);
+                MainWPDB::Instance()->updateWebsiteSyncValues($website->id, array('dtsAutomaticSync' => time()));
+                MainWPDB::Instance()->updateWebsiteOption($website, 'last_wp_upgrades', json_encode($websiteCoreUpgrades));
+                MainWPDB::Instance()->getWebsiteOption($website, 'last_plugin_upgrades', $website->plugin_upgrades);
+                MainWPDB::Instance()->getWebsiteOption($website, 'last_theme_upgrades', $website->theme_upgrades);
             }
 
             if (count($coreNewUpdate) != 0)
@@ -1001,7 +1037,7 @@ class MainWPSystem
                             if ($file != '.' && $file != '..')
                             {
                                 $theFile = $dir . $file;
-                                if (preg_match('/(.*)\.zip/', $file) && !preg_match('/(.*).sql.zip$/', $file) && (filemtime($theFile) > $lastBackup))
+                                if (MainWPUtility::isArchive($file) && !MainWPUtility::isSQLArchive($file) && (filemtime($theFile) > $lastBackup))
                                 {
                                     $lastBackup = filemtime($theFile);
                                 }
@@ -1203,9 +1239,6 @@ class MainWPSystem
 
         MainWPUtility::update_option('mainwp_cron_last_backups_continue', time());
 
-        $chunkedBackupTasks = get_option('mainwp_chunkedBackupTasks');
-        if ($chunkedBackupTasks == 0) return;
-
         //Fetch all tasks where complete < last & last checkup is more then 1minute ago! & last is more then 1 minute ago!
         $tasks = MainWPDB::Instance()->getBackupTasksToComplete();
 
@@ -1376,8 +1409,57 @@ class MainWPSystem
 
     function init()
     {
+        if (!function_exists('mainwp_current_user_can'))
+        {
+            function mainwp_current_user_can($cap_type = "", $cap)
+            {
+                global $current_user;
+                if (empty($current_user))
+                {
+                    if (!function_exists('wp_get_current_user')) require_once(ABSPATH . 'wp-includes' . DIRECTORY_SEPARATOR . 'pluggable.php');
+                    $current_user = wp_get_current_user();
+                }
+
+                if (empty($current_user))
+                {
+                    return false;
+                }
+
+                return apply_filters("mainwp_currentusercan", true, $cap_type, $cap);
+            }
+        }
+
         remove_all_filters( 'admin_footer_text' );
         add_filter('admin_footer_text', array(&$this, 'admin_footer_text'));
+    }
+
+    function uploadFile($file)
+    {
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . basename($file) . '"');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($file));
+        $this->readfile_chunked($file);
+    }
+
+    function readfile_chunked($filename)
+    {
+        $chunksize = 1024; // how many bytes per chunk
+        $handle = @fopen($filename, 'rb');
+        if ($handle === false) return false;
+
+        while (!@feof($handle))
+        {
+            $buffer = @fread($handle, $chunksize);
+            echo $buffer;
+            @ob_flush();
+            @flush();
+            $buffer = null;
+        }
+        return @fclose($handle);
     }
 
     function parse_init()
@@ -1403,6 +1485,17 @@ class MainWPSystem
         else if (isset($_GET['do']) && $_GET['do'] == 'cronUpdatesCheck') {
             $this->mainwp_cronupdatescheck_action();
         }
+        else if (isset($_GET['mwpdl']) && isset($_GET['sig']))
+        {
+            $mwpDir = MainWPUtility::getMainWPDir();
+            $mwpDir = $mwpDir[0];
+            $file = trailingslashit($mwpDir) . rawurldecode($_GET['mwpdl']);
+            if (file_exists($file) && md5(filesize($file)) == $_GET['sig'])
+            {
+                $this->uploadFile($file);
+                exit();
+            }
+        }
     }
 
     function login_form()
@@ -1420,6 +1513,19 @@ class MainWPSystem
         return $messages;
     }
 
+      function mainwp_warning_notice() {
+        if (get_option('mainwp_installation_warning_hide_the_notice')  == 'yes')
+            return;
+        ?>
+        <div id="mainwp-installation-warning" class="mainwp_info-box-red">
+            <h3><?php _e('Stop! Before you continue,','mainwp'); ?></h3>
+            <strong><?php _e('We HIGHLY recommend a NEW WordPress install for your Main Dashboard.','mainwp'); ?></strong><br/><br/>
+            <?php _e('Using a new WordPress install will help to cut down on Plugin Conflicts and other issues that can be caused by trying to run your MainWP Main Dashboard off an active site. Most hosting companies provide free subdomains ("<strong>demo.yourdomain.com</strong>") and we recommend creating one if you do not have a specific dedicated domain to run your Network Main Dashboard.<br/><br/> If you are not sure how to set up a subdomain here is a quick step by step with <a href="http://docs.mainwp.com/creating-a-subdomain-in-cpanel/">cPanel</a>, <a href="http://docs.mainwp.com/creating-a-subdomain-in-plesk/">Plesk</a> or <a href="http://docs.mainwp.com/creating-a-subdomain-in-directadmin-control-panel/">Direct Admin</a>. If you are not sure what you have, contact your hosting companies support.','mainwp'); ?>
+        <br/><br/><div style="text-align: center"><a href="#" class="button button-primary" id="remove-mainwp-installation-warning">I have read the warning and I want to proceed</a></div>
+        </div>
+        <?php
+    }
+
     function admin_init()
     {
         if (get_option('mainwp_activated') == 'yes')
@@ -1428,7 +1534,7 @@ class MainWPSystem
             wp_redirect(admin_url('admin.php?page=managesites&do=new'));
             return;
         }
-
+        add_action( 'admin_notices', array($this, 'mainwp_warning_notice' ));
         $this->posthandler->init();
 
         wp_enqueue_script('jquery-ui-tooltip');
@@ -1469,6 +1575,7 @@ class MainWPSystem
 
         if (!current_user_can('update_core')) remove_action('admin_notices', 'update_nag', 3);
     }
+
 
     //This function will read the metaboxes & save them to the post
     function publish_bulkpost($post_id)
@@ -1589,8 +1696,8 @@ class MainWPSystem
         
         if (isset($_POST['save'])) {
             global $wpdb;
-            $wpdb->update($wpdb->posts, array('post_status' => 'draft'), array('ID' => $post_id));
-            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "' . $message_id . '", "hideall" => 1), $location);'));
+            $wpdb->update($wpdb->posts, array('post_status' => 'draft'), array('ID' => $post_id));            
+            add_filter('redirect_post_location', create_function('$location', 'return add_query_arg(array("message" => "' . $message_id . '", "hideall" => 1), $location);'));            
         }
         else if ($save_seo_value || $pid == $post_id) {
             /** @var $wpdb wpdb */
@@ -1719,7 +1826,7 @@ class MainWPSystem
         echo '<script type="text/javascript" src="' . plugins_url('js/jquery.tablesorter.min.js', dirname(__FILE__)) . '"></script>';
         echo '<script type="text/javascript" src="' . plugins_url('js/jquery.tablesorter.pager.js', dirname(__FILE__)) . '"></script>';
         echo '<script type="text/javascript" src="' . plugins_url('js/moment.min.js', dirname(__FILE__)) . '"></script>';
-        echo '<script type="text/javascript" src="https://www.google.com/jsapi"></script>';
+        echo '<script type="text/javascript" src="' . plugins_url('js/jsapi.js', dirname(__FILE__)) . '"></script>';
         echo '<script type="text/javascript">
   				google.load("visualization", "1", {packages:["corechart"]});
 			</script>';
@@ -1782,7 +1889,7 @@ class MainWPSystem
     //Version
     function update_footer()
     {
-        $output = '<span><input type="button" style="background-image: none!important; padding-left: .6em !important;" id="dashboard_refresh" value="Sync Data" class="mainwp-upgrade-button button-primary button" /> <a class="button-primary button" href="admin.php?page=managesites&do=new">Add New Site</a> <a class="button-primary button mainwp-button-red" href="http://extensions.mainwp.com" target="_blank">Get New Extensions</a></span>';
+        $output = '<span><input type="button" style="background-image: none!important; padding-left: .6em !important;" id="dashboard_refresh" value="Sync Data" class="mainwp-upgrade-button button-primary button" /> <a class="button-primary button" href="admin.php?page=managesites&do=new">Add New Site</a> <a class="button-primary button mainwp-button-red" href="https://extensions.mainwp.com" target="_blank">Get New Extensions</a></span>';
 
 
         $current_wpid = MainWPUtility::get_current_wpid();
@@ -1793,7 +1900,7 @@ class MainWPSystem
         }
         else
         {
-            $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser(false, null, 'wp.dtsSync DESC, wp.url ASC'));
+            $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser(false, null, 'wp_sync.dtsSync DESC, wp.url ASC'));
         }
         ob_start();
 

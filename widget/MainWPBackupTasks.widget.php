@@ -19,8 +19,11 @@ class MainWPBackupTasks {
 		}
 		else {
 		?>
-		<div class"mainwp-row-top" style="text-align: right; margin-bottom: 1em;">
-			<a href="admin.php?page=ManageBackups" class="button" ><?php _e('Manage Backups','mainwp'); ?></a>&nbsp;&nbsp;<a href="admin.php?page=ManageBackupsAddNew" class="button-primary" ><?php _e('Add New Task','mainwp'); ?></a>
+		<div class"mainwp-row-top" style="text-align: right; margin-bottom: 1em;">                     
+                    <a href="admin.php?page=ManageBackups" class="button" ><?php _e('Manage Backups','mainwp'); ?></a>
+                    <?php if (mainwp_current_user_can("dashboard", "add_backup_tasks")) { ?>
+                    &nbsp;&nbsp;<a href="admin.php?page=ManageBackupsAddNew" class="button-primary" ><?php _e('Add New Task','mainwp'); ?></a>
+                    <?php } ?>
 		</div>
 		<div id="mainwp-backup-tasks-widget">
 			<style>
@@ -50,6 +53,7 @@ class MainWPBackupTasks {
                     $group_sites = MainWPDB::Instance()->getWebsitesByGroupId($groupid);
                     foreach ($group_sites as $group_site)
                     {
+                        if (in_array($group_site->id, $sites)) continue;
                         $sites[] = $group_site->id;
                     }
                 }

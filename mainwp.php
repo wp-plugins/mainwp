@@ -5,7 +5,7 @@
   Description: Manage all of your WP sites, even those on different servers, from one central dashboard that runs off of your own self-hosted WordPress install.
   Author: MainWP
   Author URI: http://mainwp.com
-  Version: 1.2.1
+  Version: 2.0
  */
 include_once(ABSPATH . 'wp-includes' . DIRECTORY_SEPARATOR . 'version.php'); //Version information from wordpress
 
@@ -46,9 +46,38 @@ if (!function_exists('mainwpdir'))
     }
 }
 
+if (!function_exists('mainwp_do_not_have_permissions'))
+{
+    function mainwp_do_not_have_permissions($where = "", $echo = true)
+    {
+        $msg = __("You do not have sufficient permissions to access this page (" . ucwords($where) . ").", "mainwp");
+        if ($echo)
+        {
+            echo '<div class="mainwp-permission-error"><p>' . $msg . '</p>If you need access to this page please contact the Dashboard Administrator.</div>';
+        }
+        else
+        {
+            return $msg;
+        }
+        return false;
+    }
+}
+
 $mainWP = new MainWPSystem(WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . plugin_basename(__FILE__));
 register_activation_hook(__FILE__, array($mainWP, 'activation'));
 register_deactivation_hook(__FILE__, array($mainWP, 'deactivation'));
 add_action('plugins_loaded', array($mainWP, 'update'));
 
-//die(print_r(posix_getrlimit()));
+if (isset($_REQUEST['mainwptest']))
+{
+    /** @var $wpdb wpdb */
+    global $wpdb;
+
+    $rslts = $wpdb->get_results('SELECT id FROM m1wp_mainwp_wp', ARRAY_A);
+    foreach ($rslts as $rslt)
+    {
+        $wpdb->query('DELETE FROM m1wp_mainwp_wp_sync WHERE wpid = ' . $rslt['id']);
+        $wpdb->insert('m1wp_mainwp_wp_sync', array('wpid' => $rslt['id']));
+    }
+    die('test');
+}

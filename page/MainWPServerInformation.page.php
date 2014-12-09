@@ -20,7 +20,7 @@ class MainWPServerInformation
     public static function renderHeader($shownPage)
     {
         ?>
-    <div class="wrap"><a href="http://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img
+    <div class="wrap"><a href="https://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img
             src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP"/></a>
         <img src="<?php echo plugins_url('images/icons/mainwp-serverinfo.png', dirname(__FILE__)); ?>"
              style="float: left; margin-right: 8px; margin-top: 7px ;" alt="MainWP Server Information"
@@ -51,7 +51,12 @@ class MainWPServerInformation
     }
 
     public static function render()
-    {
+    {        
+        if (!mainwp_current_user_can("dashboard", "see_server_information")) {
+            mainwp_do_not_have_permissions("server information");
+            return;
+        }
+        
         self::renderHeader('');
         ?>
         <div class="updated below-h2">
@@ -243,9 +248,9 @@ class MainWPServerInformation
         <tbody>
             <?php
             foreach ($schedules as $schedule => $option)
-            {
+            {   
             ?>
-            <tr><td><?php echo $schedule; ?></td><td><?php echo (get_option($option) === false || get_option($option) == 0) ? 'Never run' : MainWPUtility::formatTimestamp(get_option($option)); ?></td></tr>
+            <tr><td><?php echo $schedule; ?></td><td><?php echo (get_option($option) === false || get_option($option) == 0) ? 'Never run' : MainWPUtility::formatTimestamp(MainWPUtility::getTimestamp(get_option($option))); ?></td></tr>
             <?php
             }
             ?>
@@ -273,7 +278,7 @@ class MainWPServerInformation
                 foreach ($cron_info as $key => $schedule )
                 {
                     ?>
-                    <tr><td><?php echo MainWPUtility::formatTimestamp(MainWPUtility::getTimestamp($time)); ?></td><td><?php echo $schedules[$schedule['schedule']]['display'];?> </td><td><?php echo $hook; ?></td></tr>
+                    <tr><td><?php echo MainWPUtility::formatTimestamp(MainWPUtility::getTimestamp($time)); ?></td><td><?php echo (isset($schedules[$schedule['schedule']]) ? $schedules[$schedule['schedule']]['display'] : '');?> </td><td><?php echo $hook; ?></td></tr>
                     <?php
                 }
             }
@@ -658,7 +663,7 @@ class MainWPServerInformation
 
         $error_log = ini_get( 'error_log' );
         $logs      = apply_filters( 'error_log_mainwp_logs', array( $error_log ) );
-        $count     = apply_filters( 'error_log_mainwp_lines', 10 );
+        $count     = apply_filters( 'error_log_mainwp_lines', 50 );
         $lines     = array();
 
         foreach ( $logs as $log ) {

@@ -67,11 +67,19 @@ class MainWPUtility
         return false;
     }
 
-    public static function isWebsiteAvailable($url)
+    public static function isWebsiteAvailable($website)
     {
+        if (is_object($website) && isset($website->url)) {
+            $url = $website->url;
+            $verifyCertificate = isset($website->verify_certificate) ? $website->verify_certificate : null;
+        } else {
+            $url = $website;
+            $verifyCertificate = null;
+        }
+        
         if (!MainWPUtility::isDomainValid($url)) return false;
 
-        return MainWPUtility::tryVisit($url);
+        return MainWPUtility::tryVisit($url, $verifyCertificate);
     }
 
     private static function isDomainValid($url)
@@ -81,7 +89,7 @@ class MainWPUtility
     }
 
 
-    public static function tryVisit($url)
+    public static function tryVisit($url, $verifyCertificate = null)
     {
         $agent = 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)';
         $postdata = array('test' => 'yes');
@@ -94,16 +102,35 @@ class MainWPUtility
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($ch, CURLOPT_USERAGENT, $agent);
-        if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') === 1)))
+        
+        $ssl_verifyhost = false;        
+        if ($verifyCertificate !== null) { 
+            if ($verifyCertificate == 1) {
+                $ssl_verifyhost = true;
+            } else if ($verifyCertificate == 2) { // use global setting
+                if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') == 1)))
+                {
+                    $ssl_verifyhost = true;
+                }                
+            } 
+        } else {            
+            if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') == 1)))
+            {
+                $ssl_verifyhost = true;
+            }            
+        }
+        
+        if ($ssl_verifyhost)
         {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            @curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            @curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, true);
         }
         else
         {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            @curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, false);
+            @curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
+        
         $data = curl_exec($ch);
         if ($data === FALSE)
         {
@@ -116,6 +143,7 @@ class MainWPUtility
         curl_close($ch);
 
         $host = parse_url($realurl, PHP_URL_HOST);
+        $ip = false;
         if ($http_status == '200')
         {
             $dnsRecord = dns_get_record($host);
@@ -125,6 +153,22 @@ class MainWPUtility
             }
             else
             {
+                if (!isset($dnsRecord['ip']))
+                {
+                    foreach ($dnsRecord as $dnsRec)
+                    {
+                        if (isset($dnsRec['ip']))
+                        {
+                            $ip = $dnsRec['ip'];
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    $ip = $dnsRecord['ip'];
+                }
+
                 $found = false;
                 if (!isset($dnsRecord['host']))
                 {
@@ -147,7 +191,11 @@ class MainWPUtility
                 }
             }
         }
-        return array('host' => $host, 'httpCode' => $http_status, 'error' => $err, 'httpCodeString' => self::getHttpStatusErrorString($http_status));
+
+        $out = array('host' => $host, 'httpCode' => $http_status, 'error' => $err, 'httpCodeString' => self::getHttpStatusErrorString($http_status));
+        if ($ip !== false) $out['ip'] = $ip;
+
+        return $out;
     }
 
 
@@ -226,7 +274,6 @@ class MainWPUtility
      */
     static function getNotificationEmail($user = null)
     {
-        //todo: work with correct single user email..
         if ($user == null)
         {
             global $current_user;
@@ -294,7 +341,7 @@ class MainWPUtility
 
             $params = array(
                 'login_required' => 1,
-                'user' => $website->adminname,
+                'user' => rawurlencode($website->adminname),
                 'mainwpsignature' => rawurlencode($signature),
                 'nonce' => $nonce,
                 'nossl' => $nossl,
@@ -411,12 +458,32 @@ class MainWPUtility
 
             @curl_setopt($ch, CURLOPT_URL, $url);
             @curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            @curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             @curl_setopt($ch, CURLOPT_POST, true);
             $postdata = MainWPUtility::getPostDataAuthed($website, $what, $params);
             @curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
+            @curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
             @curl_setopt($ch, CURLOPT_USERAGENT, $agent);
+            
+            $ssl_verifyhost = false;
+            $verifyCertificate = isset($website->verify_certificate) ? $website->verify_certificate : null ;
+            if ($verifyCertificate !== null) { 
+                if ($verifyCertificate == 1) {
+                    $ssl_verifyhost = true;
+                } else if ($verifyCertificate == 2) { // use global setting
+                    if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') == 1)))
+                    {
+                        $ssl_verifyhost = true;
+                    }                
+                } 
+            } else {            
+                if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') == 1)))
+                {
+                    $ssl_verifyhost = true;
+                }            
+            }
 
-            if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') === 1)))
+            if ($ssl_verifyhost)
             {
                 @curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 2);
                 @curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, true);
@@ -489,18 +556,24 @@ class MainWPUtility
             foreach ($requestHandles as $id => $ch)
             {
                 $data = curl_exec($ch);
+
+                if ($handler != null)
+                {
+                    $site = &$handleToWebsite[self::get_resource_id($ch)];
+                    call_user_func($handler, $data, $site, $output);
+                }
             }
         }
         return true;
     }
 
-    static function fetchUrlAuthed(&$website, $what, $params = null, $checkConstraints = false, $pForceFetch = false)
+    static function fetchUrlAuthed(&$website, $what, $params = null, $checkConstraints = false, $pForceFetch = false, $pRetryFailed = true)
     {
         if ($params == null) $params = array();
         $params['optimize'] = ((get_option("mainwp_optimize") == 1) ? 1 : 0);
 
         $postdata = MainWPUtility::getPostDataAuthed($website, $what, $params);
-        $information = MainWPUtility::fetchUrl($website, $website->url, $postdata, $checkConstraints, $pForceFetch);
+        $information = MainWPUtility::fetchUrl($website, $website->url, $postdata, $checkConstraints, $pForceFetch, $website->verify_certificate, $pRetryFailed);
       
         if (is_array($information) && isset($information['sync']))
         {
@@ -511,11 +584,11 @@ class MainWPUtility
         return $information;
     }
 
-    static function fetchUrlNotAuthed($url, $admin, $what, $params = null, $pForceFetch = false)
+    static function fetchUrlNotAuthed($url, $admin, $what, $params = null, $pForceFetch = false, $verifyCertificate = null)
     {
         $postdata = MainWPUtility::getPostDataNotAuthed($url, $admin, $what, $params);
         $website = null;
-        return MainWPUtility::fetchUrl($website, $url, $postdata, $pForceFetch);
+        return MainWPUtility::fetchUrl($website, $url, $postdata, $pForceFetch, false, $verifyCertificate);
     }
 
     static function fetchUrlClean($url, $postdata)
@@ -529,7 +602,7 @@ class MainWPUtility
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
         curl_setopt($ch, CURLOPT_USERAGENT, $agent);
 
-        if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') === 1)))
+        if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') == 1)))
         {
             @curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 2);
             @curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, true);
@@ -551,7 +624,7 @@ class MainWPUtility
         }
     }
 
-    static function fetchUrl(&$website, $url, $postdata, $checkConstraints = false, $pForceFetch = false)
+    static function fetchUrl(&$website, $url, $postdata, $checkConstraints = false, $pForceFetch = false, $verifyCertificate = null, $pRetryFailed = true)
     {
         $start = time();
 
@@ -560,11 +633,11 @@ class MainWPUtility
             $tmpUrl = $url;
             if (substr($tmpUrl, -1) != '/') { $tmpUrl .= '/'; }
 
-            return self::_fetchUrl($website, $tmpUrl . 'wp-admin/', $postdata, $checkConstraints, $pForceFetch);
+            return self::_fetchUrl($website, $tmpUrl . 'wp-admin/', $postdata, $checkConstraints, $pForceFetch, $verifyCertificate);
         }
         catch (Exception $e)
         {
-            if ((time() - $start) > (60 * 2))
+            if (!$pRetryFailed || ((time() - $start) > (60 * 2)))
             {
                 //If more then 2minutes past since the initial request, do not retry this!
                 throw $e;
@@ -572,7 +645,7 @@ class MainWPUtility
 
             try
             {
-                return self::_fetchUrl($website, $url, $postdata, $checkConstraints, $pForceFetch);
+                return self::_fetchUrl($website, $url, $postdata, $checkConstraints, $pForceFetch, $verifyCertificate);
             }
             catch (Exception $ex)
             {
@@ -581,7 +654,7 @@ class MainWPUtility
         }
     }
 
-    static function _fetchUrl(&$website, $url, $postdata, $checkConstraints = false, $pForceFetch = false)
+    static function _fetchUrl(&$website, $url, $postdata, $checkConstraints = false, $pForceFetch = false, $verifyCertificate = null)
     {
         $agent= 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)';
 
@@ -590,6 +663,7 @@ class MainWPUtility
             //todo: RS:
             //check if offline
         }
+
         $identifier = null;
         if ($checkConstraints)
         {
@@ -737,7 +811,25 @@ class MainWPUtility
         @curl_setopt($ch, CURLOPT_POSTFIELDS, $postdata);
         @curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         @curl_setopt($ch, CURLOPT_USERAGENT, $agent);
-        if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') === 1)))
+        
+        $ssl_verifyhost = false;
+        if ($verifyCertificate !== null) { 
+            if ($verifyCertificate == 1) {
+                $ssl_verifyhost = true;
+            } else if ($verifyCertificate == 2) { // use global setting
+                if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') == 1)))
+                {
+                    $ssl_verifyhost = true;
+                }                
+            } 
+        } else {            
+            if (((get_option('mainwp_sslVerifyCertificate') === false) || (get_option('mainwp_sslVerifyCertificate') == 1)))
+            {
+                $ssl_verifyhost = true;
+            }            
+        }
+        
+        if ($ssl_verifyhost)
         {
             @curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, 2);
             @curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, true);
@@ -747,10 +839,12 @@ class MainWPUtility
             @curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, false);
             @curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
+            
         $timeout = 20 * 60 * 60; //20 minutes
         @curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
         if (!ini_get('safe_mode')) @set_time_limit($timeout);
         @ini_set('max_execution_time', $timeout);
+        MainWPUtility::endSession();
 
         $disabled_functions = ini_get('disable_functions');
         if (empty($disabled_functions) || (stristr($disabled_functions, 'curl_multi_exec') === false))
@@ -810,7 +904,6 @@ class MainWPUtility
         else if (preg_match('/<mainwp>(.*)<\/mainwp>/', $data, $results) > 0) {
             $result = $results[1];
             $information = unserialize(base64_decode($result));
-
             return $information;
         }
         else
@@ -829,29 +922,38 @@ class MainWPUtility
 
     }
 
-    public static function downloadToFile($url, $file)
+    public static function downloadToFile($url, $file, $size = false)
     {
-        if (file_exists($file)) {
+        if (@file_exists($file) && (($size === false) || (@filesize($file) > $size)))
+        {
             @unlink($file);
         }
 
-        if (!file_exists(dirname($file)))
+        if (!@file_exists(@dirname($file)))
         {
-            @mkdir(dirname($file), 0777, true);
+            @mkdir(@dirname($file), 0777, true);
         }
 
-        if (!file_exists(dirname($file)))
+        if (!@file_exists(@dirname($file)))
         {
             throw new MainWPException(__('Could not create directory to download the file.'));
         }
 
-        if (!@is_writable(dirname($file)))
+        if (!@is_writable(@dirname($file)))
         {
             throw new MainWPException(__('MainWP upload directory is not writable.'));
         }
 
-        $fp = fopen($file, 'w');
+        $fp = fopen($file, 'a');
         $agent= 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)';
+        if ($size !== false)
+        {
+            if (@file_exists($file))
+            {
+                $size = @filesize($file);
+                $url .= '&foffset='.$size;
+            }
+        }
         $ch = curl_init(str_replace(' ', '%20', $url));
         curl_setopt($ch, CURLOPT_FILE, $fp);
         curl_setopt($ch, CURLOPT_USERAGENT, $agent);
@@ -881,6 +983,16 @@ class MainWPUtility
         return array($dir, $url);
     }
 
+    public static function getDownloadUrl($what, $filename)
+    {
+        $specificDir = MainWPUtility::getMainWPSpecificDir($what);
+        $mwpDir = MainWPUtility::getMainWPDir();
+        $mwpDir = $mwpDir[0];
+        $fullFile = $specificDir . $filename;
+
+        return admin_url('?sig=' . md5(filesize($fullFile)) . '&mwpdl=' . rawurlencode(str_replace($mwpDir, "", $fullFile)));
+    }
+
     public static function getMainWPSpecificDir($dir = null)
     {
         if (MainWPSystem::Instance()->isSingleUser())
@@ -892,8 +1004,23 @@ class MainWPUtility
             global $current_user;
             $userid = $current_user->ID;
         }
+
         $dirs = self::getMainWPDir();
-        return $dirs[0] . $userid . ($dir != null ? DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR : '');
+        $newdir = $dirs[0] . $userid . ($dir != null ? DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR : '');
+
+        if (!file_exists($newdir))
+        {
+            @mkdir($newdir, 0777, true);
+        }
+
+        if ($dirs[0] . $userid != null && !file_exists(trailingslashit($dirs[0] . $userid) . '.htaccess'))
+        {
+            $file = @fopen(trailingslashit($dirs[0] . $userid) . '.htaccess', 'w+');
+            @fwrite($file, 'deny from all');
+            @fclose($file);
+        }
+
+        return $newdir;
     }
 
     public static function getMainWPSpecificUrl($dir)
@@ -1273,14 +1400,14 @@ class MainWPUtility
             <br>
             <div style="background:#ffffff;padding:0 1.618em;font:13px/20px Helvetica,Arial,Sans-serif;padding-bottom:50px!important">
                 <div style="width:600px;background:#fff;margin-left:auto;margin-right:auto;margin-top:10px;margin-bottom:25px;padding:0!important;border:10px Solid #fff;border-radius:10px;overflow:hidden">
-                    <div style="display: block; width: 100% ; background-image: url(http://mainwp.com/wp-content/uploads/2013/02/debut_light.png) ; background-repeat: repeat; border-bottom: 2px Solid #7fb100 ; overflow: hidden;">
+                    <div style="display: block; width: 100% ; background: #fafafa; border-bottom: 2px Solid #7fb100 ; overflow: hidden;">
                       <div style="display: block; width: 95% ; margin-left: auto ; margin-right: auto ; padding: .5em 0 ;">
-                         <div style="float: left;"><a href="http://mainwp.com"><img src="http://mainwp.com/wp-content/uploads/2013/07/MainWP-Logo-1000-300x62.png" alt="MainWP" height="30"/></a></div>
+                         <div style="float: left;"><a href="https://mainwp.com"><img src="'. plugins_url('images/logo.png', dirname(__FILE__)) .'" alt="MainWP" height="30"/></a></div>
                          <div style="float: right; margin-top: .6em ;">
-                            <span style="display: inline-block; margin-right: .8em;"><a href="http://extensions.mainwp.com" style="font-family: Helvetica, Sans; color: #7fb100; text-transform: uppercase; font-size: 14px;">Extensions</a></span>
-                            <span style="display: inline-block; margin-right: .8em;"><a style="font-family: Helvetica, Sans; color: #7fb100; text-transform: uppercase; font-size: 14px;" href="http://mainwp.com/forum">Support</a></span>
+                            <span style="display: inline-block; margin-right: .8em;"><a href="https://extensions.mainwp.com" style="font-family: Helvetica, Sans; color: #7fb100; text-transform: uppercase; font-size: 14px;">Extensions</a></span>
+                            <span style="display: inline-block; margin-right: .8em;"><a style="font-family: Helvetica, Sans; color: #7fb100; text-transform: uppercase; font-size: 14px;" href="https://mainwp.com/forum">Support</a></span>
                             <span style="display: inline-block; margin-right: .8em;"><a style="font-family: Helvetica, Sans; color: #7fb100; text-transform: uppercase; font-size: 14px;" href="http://docs.mainwp.com">Documentation</a></span>
-                            <span style="display: inline-block; margin-right: .5em;" class="mainwp-memebers-area"><a href="http://mainwp.com/member/login/index" style="padding: .6em .5em ; border-radius: 50px ; -moz-border-radius: 50px ; -webkit-border-radius: 50px ; background: #1c1d1b; border: 1px Solid #000; color: #fff !important; font-size: .9em !important; font-weight: normal ; -webkit-box-shadow:  0px 0px 0px 5px rgba(0, 0, 0, .1); box-shadow:  0px 0px 0px 5px rgba(0, 0, 0, .1);">Members Area</a></span>
+                            <span style="display: inline-block; margin-right: .5em;" class="mainwp-memebers-area"><a href="https://mainwp.com/member/login/index" style="padding: .6em .5em ; border-radius: 50px ; -moz-border-radius: 50px ; -webkit-border-radius: 50px ; background: #1c1d1b; border: 1px Solid #000; color: #fff !important; font-size: .9em !important; font-weight: normal ; -webkit-box-shadow:  0px 0px 0px 5px rgba(0, 0, 0, .1); box-shadow:  0px 0px 0px 5px rgba(0, 0, 0, .1);">Members Area</a></span>
                          </div><div style="clear: both;"></div>
                       </div>
                     </div>
@@ -1296,8 +1423,8 @@ class MainWPUtility
 
                     <div style="display: block; width: 100% ; background: #1c1d1b;">
                       <div style="display: block; width: 95% ; margin-left: auto ; margin-right: auto ; padding: .5em 0 ;">
-                        <div style="padding: .5em 0 ; float: left;"><p style="color: #fff; font-family: Helvetica, Sans; font-size: 12px ;">© 2013 MainWP. All Rights Reserved.</p></div>
-                        <div style="float: right;"><a href="http://mainwp.com"><img src="http://mainwp.com/wp-content/uploads/2013/07/MainWP-Icon-300.png" height="45"/></a></div><div style="clear: both;"></div>
+                        <div style="padding: .5em 0 ; float: left;"><p style="color: #fff; font-family: Helvetica, Sans; font-size: 12px ;">Â© 2013 MainWP. All Rights Reserved.</p></div>
+                        <div style="float: right;"><a href="https://mainwp.com"><img src="'. plugins_url('images/g-all-top-menu-item.png', dirname(__FILE__)) .'" height="45"/></a></div><div style="clear: both;"></div>
                       </div>
                    </div>
                 </div>
@@ -1632,6 +1759,98 @@ class MainWPUtility
     {
         return str_replace(array('http:', 'https:'), array('', ''), $pUrl);
     }
-}
 
-?>
+    public static function isArchive($pFileName, $pPrefix = '', $pSuffix = '')
+    {
+        return preg_match('/' . $pPrefix . '(.*).(zip|tar|tar.gz|tar.bz2)' . $pSuffix . '$/', $pFileName);
+    }
+
+    public static function isSQLFile($pFileName)
+    {
+        return preg_match('/(.*).sql$/', $pFileName) || self::isSQLArchive($pFileName);
+    }
+
+    public static function isSQLArchive($pFileName)
+    {
+        return preg_match('/(.*).sql.(zip|tar|tar.gz|tar.bz2)$/', $pFileName);
+    }
+
+    public static function getCurrentArchiveExtension($website = false, $task = false)
+    {
+        $useSite = true;
+        if ($task != false)
+        {
+            if ($task->archiveFormat == 'global')
+            {
+                $useGlobal = true;
+                $useSite = false;
+            }
+            else if ($task->archiveFormat == '' || $task->archiveFormat == 'site')
+            {
+                $useGlobal = false;
+                $useSite = true;
+            }
+            else
+            {
+                $archiveFormat = $task->archiveFormat;
+                $useGlobal = false;
+                $useSite = false;
+            }
+        }
+
+        if ($useSite)
+        {
+            if ($website == false)
+            {
+                $useGlobal = true;
+            }
+            else
+            {
+                $backupSettings = MainWPDB::Instance()->getWebsiteBackupSettings($website->id);
+                $archiveFormat = $backupSettings->archiveFormat;
+                $useGlobal = ($archiveFormat == 'global');
+            }
+        }
+
+        if ($useGlobal)
+        {
+            $archiveFormat = get_option('mainwp_archiveFormat');
+            if ($archiveFormat === false) $archiveFormat = 'tar.gz';
+        }
+
+        return $archiveFormat;
+    }
+
+    public static function getRealExtension($path)
+    {
+        $checks = array('.sql.zip', '.sql.tar', '.sql.tar.gz', '.sql.tar.bz2', '.tar.gz', '.tar.bz2');
+        foreach ($checks as $check)
+        {
+            if (self::endsWith($path, $check)) return $check;
+        }
+
+        return '.' . pathinfo($path, PATHINFO_EXTENSION);
+    }
+
+    public static function sanitize_file_name($filename)
+    {
+        $filename = str_replace(array('|', '/', '\\', ' ', ':'), array('-', '-', '-', '-', '-'), $filename);
+        return sanitize_file_name($filename);
+    }
+
+    public static function normalize_filename($s)
+    {
+        // maps German (umlauts) and other European characters onto two characters before just removing diacritics
+        $s    = preg_replace( '@\x{00c4}@u'    , "A",    $s );    // umlaut Ä => A
+        $s    = preg_replace( '@\x{00d6}@u'    , "O",    $s );    // umlaut Ö => O
+        $s    = preg_replace( '@\x{00dc}@u'    , "U",    $s );    // umlaut Ü => U
+        $s    = preg_replace( '@\x{00cb}@u'    , "E",    $s );    // umlaut Ë => E
+        $s    = preg_replace( '@\x{00e4}@u'    , "a",    $s );    // umlaut ä => a
+        $s    = preg_replace( '@\x{00f6}@u'    , "o",    $s );    // umlaut ö => o
+        $s    = preg_replace( '@\x{00fc}@u'    , "u",    $s );    // umlaut ü => u
+        $s    = preg_replace( '@\x{00eb}@u'    , "e",    $s );    // umlaut ë => e
+        $s    = preg_replace( '@\x{00f1}@u'    , "n",    $s );    // ñ => n
+        $s    = preg_replace( '@\x{00ff}@u'    , "y",    $s );    // ÿ => y
+        return $s;
+    }
+}

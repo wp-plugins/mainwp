@@ -7,14 +7,14 @@ class MainWPOfflineChecks
     }
 
     public static function initMenu()
-    {
-        add_submenu_page('mainwp_tab', __('Offline Checks','mainwp'), __('Offline Checks','mainwp'), 'read', 'OfflineChecks', array(MainWPOfflineChecks::getClassName(), 'render'));
-        add_submenu_page('mainwp_tab', __('Offline Checks Help','mainwp'), '<div class="mainwp-hidden">' .__('Offline Checks Help','mainwp').'</div>', 'read', 'OfflineChecksHelp', array(MainWPOfflineChecks::getClassName(), 'QSGManageOfflineChecks'));
+    {       
+        add_submenu_page('mainwp_tab', __('Offline Checks','mainwp'), ' <div class="mainwp-hidden">' . __('Offline Checks','mainwp') . '</div>', 'read', 'OfflineChecks', array(MainWPOfflineChecks::getClassName(), 'render'));
+        add_submenu_page('mainwp_tab', __('Offline Checks Help','mainwp'), '<div class="mainwp-hidden">' .__('Offline Checks Help','mainwp').'</div>', 'read', 'OfflineChecksHelp', array(MainWPOfflineChecks::getClassName(), 'QSGManageOfflineChecks'));    
     }
 
-    public static function renderHeader($shownPage) {
+    public static function renderHeader($shownPage) {                
         ?>
-        <div class="wrap"><a href="http://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP" /></a>
+        <div class="wrap"><a href="https://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP" /></a>
         <img src="<?php echo plugins_url('images/icons/mainwp-offline.png', dirname(__FILE__)); ?>" style="float: left; margin-right: 8px; margin-top: 7px ;" alt="MainWP Offline Checks" height="32"/>
         <h2><?php _e('Offline Checks','mainwp'); ?></h2><div style="clear: both;"></div><br/>
         <div class="mainwp-tabs" id="mainwp-tabs">
@@ -34,10 +34,14 @@ class MainWPOfflineChecks
 
     public static function render()
     {
+        if (!mainwp_current_user_can("dashboard", "manage_offline_checks")) {
+            mainwp_do_not_have_permissions("manage offline checks");
+            return;
+        }
         $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesForCurrentUser());
         $statusses = array('hourly', '2xday', 'daily', 'weekly');
 
-        self::renderHeader('OfflineChecks');
+         do_action("mainwp-pageheader-settings", "OfflineChecks");
 
         ?>
         <div class="mainwp_info-box">
@@ -99,7 +103,7 @@ class MainWPOfflineChecks
             </tbody>
         </table>
     <?php
-        self::renderFooter('OfflineChecks');
+        do_action("mainwp-pagefooter-settings", "OfflineChecks");
     }
 
     public static function updateWebsite()
@@ -200,9 +204,9 @@ class MainWPOfflineChecks
                     //Add
                     if (function_exists('openssl_pkey_new'))
                     {
-                        $conf = array('private_key_bits' => 384);
-                        $res = openssl_pkey_new($conf);
-                        openssl_pkey_export($res, $privkey);
+                        $conf = array('private_key_bits' => 384);                                                 
+                        $res = openssl_pkey_new($conf);                                                          
+                        @openssl_pkey_export($res, $privkey, NULL, $conf);
                         $pubkey = openssl_pkey_get_details($res);
                         $pubkey = $pubkey["key"];
                     }
@@ -212,14 +216,14 @@ class MainWPOfflineChecks
                         $pubkey = '-1';
                     }
 
-                    $information = MainWPUtility::fetchUrlNotAuthed($website->url, $website->adminname, 'register', array('pubkey' => $pubkey, 'server' => get_admin_url()));
+                    $information = MainWPUtility::fetchUrlNotAuthed($website->url, $website->adminname, 'register', array('pubkey' => $pubkey, 'server' => get_admin_url()), false, $website->verify_certificate);
 
                     if (!isset($information['error']) || ($information['error'] == ''))
                     {
                         if (isset($information['register']) && $information['register'] == 'OK')
                         {
                             //Update website
-                            MainWPDB::Instance()->updateWebsiteValues($website->id, array('pubkey' => base64_encode($pubkey), 'privkey' => base64_encode($privkey), 'nossl' => $information['nossl'], 'nosslkey' => (isset($information['nosslkey']) ? $information['nosslkey'] : '')));
+                            MainWPDB::Instance()->updateWebsiteValues($website->id, array('pubkey' => base64_encode($pubkey), 'privkey' => base64_encode($privkey), 'nossl' => $information['nossl'], 'nosslkey' => (isset($information['nosslkey']) ? $information['nosslkey'] : ''), 'uniqueId' =>  (isset($information['uniqueId']) ? $information['uniqueId'] : '')));
                             $message = 'Site successfully reconnected';
                             MainWPSync::syncInformationArray($website, $information);
                         }
@@ -236,7 +240,7 @@ class MainWPOfflineChecks
 
     public static function performCheck($website, $sendOnline = false, &$emailOutput = null)
     {
-        $result = MainWPUtility::isWebsiteAvailable($website->url);
+        $result = MainWPUtility::isWebsiteAvailable($website);
         if (!$result || (isset($result['error']) && ($result['error'] != '')) || ($result['httpCode'] != '200')) {
             MainWPDB::Instance()->updateWebsiteValues($website->id, array('offline_check_result' => '-1', 'offline_checks_last' => time()));
             $body = 'We\'ve had some issues trying to reach your website <a href="' . $website->url . '">' . $website->name . '</a>. ' . (isset($result['error']) && ($result['error'] != '') ? ' Error message: '. $result['error'] . '.' : 'Received HTTP-code: ' . $result['httpCode'] . ($result['httpCodeString'] != '' ? ' (' . $result['httpCodeString'] . ').' : ''));

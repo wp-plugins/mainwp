@@ -18,9 +18,11 @@ class MainWPManageBackups
 
     public static function initMenu()
     {
-        $page = add_submenu_page('mainwp_tab', __('Backups','mainwp'), '<span id="mainwp-Backups">'. __('Backups','mainwp') . '</span>', 'read', 'ManageBackups', array(MainWPManageBackups::getClassName(), 'renderManager'));
+        $page = add_submenu_page('mainwp_tab', __('Schedule Backup','mainwp'), '<span id="mainwp-Backups">'. __('Schedule Backup','mainwp') . '</span>', 'read', 'ManageBackups', array(MainWPManageBackups::getClassName(), 'renderManager'));
         add_action('load-' . $page, array(MainWPManageBackups::getClassName(), 'load_page'));
-        add_submenu_page('mainwp_tab', __('Add New Schedule','mainwp'), '<div class="mainwp-hidden">' . __('Add New','mainwp') . '</div>', 'read', 'ManageBackupsAddNew', array(MainWPManageBackups::getClassName(), 'renderNew'));
+        if (mainwp_current_user_can("dashboard", "add_backup_tasks")) {
+            add_submenu_page('mainwp_tab', __('Add New Schedule','mainwp'), '<div class="mainwp-hidden">' . __('Add New','mainwp') . '</div>', 'read', 'ManageBackupsAddNew', array(MainWPManageBackups::getClassName(), 'renderNew'));
+        }
         add_submenu_page('mainwp_tab', __('Backups Help','mainwp'), '<div class="mainwp-hidden">' . __('Backups Help','mainwp') . '</div>', 'read', 'BackupsHelp', array(MainWPManageBackups::getClassName(), 'QSGManageBackups'));
 
         self::$subPages = apply_filters('mainwp-getsubpages-backups', array());
@@ -45,8 +47,10 @@ class MainWPManageBackups
         <div class="wp-submenu sub-open" style="">
             <div class="mainwp_boxout">
                 <div class="mainwp_boxoutin"></div>
-                <a href="<?php echo admin_url('admin.php?page=ManageBackups'); ?>" class="mainwp-submenu"><?php _e('All Backups','mainwp'); ?></a>
+                <a href="<?php echo admin_url('admin.php?page=ManageBackups'); ?>" class="mainwp-submenu"><?php _e('Manage Backups','mainwp'); ?></a>
+                <?php if (mainwp_current_user_can("dashboard", "add_backup_tasks")) { ?>
                 <a href="<?php echo admin_url('admin.php?page=ManageBackupsAddNew'); ?>" class="mainwp-submenu"><?php _e('Add New','mainwp'); ?></a>
+                <?php } ?>
                 <?php
                 if (isset(self::$subPages) && is_array(self::$subPages))
                 {
@@ -69,7 +73,7 @@ class MainWPManageBackups
     {
         ?>
     <div class="wrap">
-        <a href="http://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img
+        <a href="https://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img
                 src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50"
                 alt="MainWP"/></a>
         <img src="<?php echo plugins_url('images/icons/mainwp-backups.png', dirname(__FILE__)); ?>"
@@ -77,7 +81,9 @@ class MainWPManageBackups
         <h2><?php _e('Backups','mainwp'); ?></h2><div style="clear: both;"></div><br/><br/>
         <div class="mainwp-tabs" id="mainwp-tabs">
             <a class="nav-tab pos-nav-tab <?php if ($shownPage == '') { echo "nav-tab-active"; } ?>" href="admin.php?page=ManageBackups"><?php _e('Manage','mainwp'); ?></a>
+            <?php if (mainwp_current_user_can("dashboard", "add_backup_tasks")) { ?>
             <a class="nav-tab pos-nav-tab <?php if ($shownPage == 'AddNew') { echo "nav-tab-active"; } ?>" href="admin.php?page=ManageBackupsAddNew"><?php _e('Add New','mainwp'); ?></a>
+            <?php } ?>
             <a style="float: right" class="mainwp-help-tab nav-tab pos-nav-tab <?php if ($shownPage === 'BackupsHelp') { echo "nav-tab-active"; } ?>" href="admin.php?page=BackupsHelp"><?php _e('Help','mainwp'); ?></a>
             <?php if ($shownPage == 'ManageBackupsEdit') {  ?><a class="nav-tab pos-nav-tab nav-tab-active" href="#"><?php _e('Edit','mainwp'); ?></a><?php } ?>
             <?php
@@ -163,6 +169,10 @@ class MainWPManageBackups
         $backupTask = null;
         if (isset($_GET['id']) && MainWPUtility::ctype_digit($_GET['id']))
         {
+            if (!mainwp_current_user_can("dashboard", "edit_backup_tasks")) {
+                mainwp_do_not_have_permissions("edit backup tasks");
+                return;
+            }
             $backupTaskId = $_GET['id'];
 
             $backupTask = MainWPDB::Instance()->getBackupTaskById($backupTaskId);
@@ -238,6 +248,11 @@ class MainWPManageBackups
 
     public static function renderNew()
     {
+        if (!mainwp_current_user_can("dashboard", "add_backup_tasks")) {
+            mainwp_do_not_have_permissions("add backup tasks");
+            return;
+        }
+
         self::renderHeader('AddNew'); ?>
         <div class="mainwp_info-box"><strong><?php _e('Use these backup tasks to run backups at different times on different days. To backup a site right away please go to the','mainwp'); ?> <a href="<?php echo admin_url(); ?>admin.php?page=managesites"><?php _e('Sites page','mainwp'); ?></a> <?php _e('and select Backup Now.','mainwp'); ?></strong></div>
         <div id="mainwp_managebackups_add_errors" class="mainwp_error error"></div>
@@ -287,7 +302,7 @@ class MainWPManageBackups
         <table class="form-table" style="width: 100%">
             <tr class="form-field form-required">
                 <th scope="row"><?php _e('Task Name:','mainwp'); ?></th>
-                <td><input type="text" id="mainwp_managebackups_add_name" name="mainwp_managebackups_add_name" value="<?php echo (isset($task) ? $task->name : ''); ?>" /><span class="mainwp-form_hint">e.g. Site1 Daily, Site1 Full Weekly, ...</span></td>
+                <td><input type="text" id="mainwp_managebackups_add_name" class="mainwp-field mainwp-task-name" name="mainwp_managebackups_add_name" value="<?php echo (isset($task) ? $task->name : ''); ?>" /><span class="mainwp-form_hint">e.g. Site1 Daily, Site1 Full Weekly, ...</span></td>
             </tr>
             <tr>
                 <th scope="row"><?php _e('Task Schedule:','mainwp'); ?></th>
@@ -295,7 +310,7 @@ class MainWPManageBackups
             </tr>
             <tr>
                 <th scope="row"><?php _e('Backup File Name:','mainwp'); ?></th>
-                <td><input type="text" name="backup_filename" id="backup_filename" value="<?php echo (isset($task) ? $task->filename : ''); ?>" /><span class="mainwp-form_hint" style="display: inline; max-width: 500px;">Allowed Structure Tags: <strong>%url%</strong>, <strong>%date%</strong>, <strong>%time%</strong>, <strong>%type%</strong></span>
+                <td><input type="text" name="backup_filename" id="backup_filename" class="mainwp-field mainwp-file-name" value="<?php echo (isset($task) ? $task->filename : ''); ?>" /><span class="mainwp-form_hint" style="display: inline; max-width: 500px;">Allowed Structure Tags: <strong>%url%</strong>, <strong>%date%</strong>, <strong>%time%</strong>, <strong>%type%</strong></span>
                 </td>
             </tr>
             <tr><td colspan="2"><hr /></td></tr>
@@ -395,6 +410,95 @@ class MainWPManageBackups
                 }
             ?>
             <?php do_action('mainwp_backups_remote_settings', array('task' => $task)); ?>
+            <tr><td colspan="2"><hr /></td></tr>
+            <?php
+            $globalArchiveFormat = get_option('mainwp_archiveFormat');
+            if ($globalArchiveFormat == false) $globalArchiveFormat = 'tar.gz';
+            if ($globalArchiveFormat == 'zip')
+            {
+                $globalArchiveFormatText = 'Zip';
+            }
+            else if ($globalArchiveFormat == 'tar')
+            {
+                $globalArchiveFormatText = 'Tar';
+            }
+            else if ($globalArchiveFormat == 'tar.gz')
+            {
+                $globalArchiveFormatText = 'Tar GZip';
+            }
+            else if ($globalArchiveFormat == 'tar.bz2')
+            {
+                $globalArchiveFormatText = 'Tar BZip2';
+            }
+
+            $archiveFormat = isset($task) ? $task->archiveFormat : 'site';
+            $useGlobal = ($archiveFormat == 'global');
+            $useSite = ($archiveFormat == '' || $archiveFormat == 'site');
+            ?>
+            <tr>
+                <th scope="row"><?php _e('Archive format','mainwp'); ?> <?php MainWPUtility::renderToolTip(__('','mainwp')); ?></th>
+                <td>
+                    <table class="mainwp-nomarkup">
+                        <tr>
+                            <td valign="top">
+                                <span class="mainwp-select-bg"><select name="mainwp_archiveFormat" id="mainwp_archiveFormat">
+                                    <option value="site" <?php if ($useSite): ?>selected<?php endif; ?>>Site specific setting</option>
+                                    <option value="global" <?php if ($useGlobal): ?>selected<?php endif; ?>>Global setting (<?php echo $globalArchiveFormatText; ?>)</option>
+                                    <option value="zip" <?php if ($archiveFormat == 'zip'): ?>selected<?php endif; ?>>Zip</option>
+                                    <option value="tar" <?php if ($archiveFormat == 'tar'): ?>selected<?php endif; ?>>Tar</option>
+                                    <option value="tar.gz" <?php if ($archiveFormat == 'tar.gz'): ?>selected<?php endif; ?>>Tar GZip</option>
+                                    <option value="tar.bz2" <?php if ($archiveFormat == 'tar.bz2'): ?>selected<?php endif; ?>>Tar BZip2</option>
+                                </select><label></label></span>
+                            </td>
+                            <td>
+                                <i>
+                                <span id="info_site" class="archive_info" <?php if (!$useSite): ?>style="display: none;"<?php endif; ?>>Depends on the settings of the child site</span>
+                                <span id="info_global" class="archive_info" <?php if (!$useGlobal): ?>style="display: none;"<?php endif; ?>><?php
+                                    if ($globalArchiveFormat == 'zip'): ?>Uses PHP native Zip-library, when missing, the PCLZip library included in Wordpress will be used. (Good compression, fast with native zip-library)<?php
+                                    elseif ($globalArchiveFormat == 'tar'): ?>Uses PHP native Zip-library, when missing, the PCLZip library included in Wordpress will be used. (Good compression, fast with native zip-library)<?php
+                                    elseif ($globalArchiveFormat == 'tar.gz'): ?>Creates a GZipped tar-archive. (Good compression, fast, low memory usage)<?php
+                                    elseif ($globalArchiveFormat == 'tar.bz2'): ?>Creates a BZipped tar-archive. (Best compression, fast, low memory usage)<?php endif; ?></span>
+                                <span id="info_zip" class="archive_info" <?php if ($archiveFormat != 'zip'): ?>style="display: none;"<?php endif; ?>>Uses PHP native Zip-library, when missing, the PCLZip library included in Wordpress will be used. (Good compression, fast with native zip-library)</span>
+                                <span id="info_tar" class="archive_info" <?php if ($archiveFormat != 'tar'): ?>style="display: none;"<?php endif; ?>>Creates an uncompressed tar-archive. (No compression, fast, low memory usage)</span>
+                                <span id="info_tar.gz" class="archive_info" <?php if ($archiveFormat != 'tar.gz'): ?>style="display: none;"<?php endif; ?>>Creates a GZipped tar-archive. (Good compression, fast, low memory usage)</span>
+                                <span id="info_tar.bz2" class="archive_info" <?php if ($archiveFormat != 'tar.bz2'): ?>style="display: none;"<?php endif; ?>>Creates a BZipped tar-archive. (Best compression, fast, low memory usage)</span>
+                                </i>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <?php
+            $maximumFileDescriptorsOverride = isset($task) ? ($task->maximumFileDescriptorsOverride == 1) : false;
+            $maximumFileDescriptorsAuto= isset($task) ? ($task->maximumFileDescriptorsAuto == 1) : false;
+            $maximumFileDescriptors = isset($task) ? $task->maximumFileDescriptors : 150;
+            ?>
+            <tr class="archive_method archive_zip" <?php if ($archiveFormat != 'zip'): ?>style="display: none;"<?php endif; ?>>
+                <th scope="row"><?php _e('Maximum File Descriptors on Child','mainwp'); ?> <?php MainWPUtility::renderToolTip('The maximum number of open file descriptors on the child hosting.', 'http://docs.mainwp.com/maximum-number-of-file-descriptors/'); ?></th>
+                <td>
+                    <div class="mainwp-radio" style="float: left;">
+                      <input type="radio" value="" name="mainwp_options_maximumFileDescriptorsOverride" id="mainwp_options_maximumFileDescriptorsOverride_global" <?php echo (!$maximumFileDescriptorsOverride ? 'checked="true"' : ''); ?>"/>
+                      <label for="mainwp_options_maximumFileDescriptorsOverride_global"></label>
+                    </div>Global Setting (<a href="<?php echo admin_url('admin.php?page=Settings'); ?>">Change Here</a>)<br/>
+                    <div class="mainwp-radio" style="float: left;">
+                      <input type="radio" value="override" name="mainwp_options_maximumFileDescriptorsOverride" id="mainwp_options_maximumFileDescriptorsOverride_override" <?php echo ($maximumFileDescriptorsOverride ? 'checked="true"' : ''); ?>"/>
+                      <label for="mainwp_options_maximumFileDescriptorsOverride_override"></label>
+                    </div>Override<br/><br />
+
+                    <div style="float: left">Auto detect:&nbsp;</div><div class="mainwp-checkbox"><input type="checkbox" id="mainwp_maximumFileDescriptorsAuto" name="mainwp_maximumFileDescriptorsAuto" <?php echo ($maximumFileDescriptorsAuto ? 'checked="checked"' : ''); ?> /> <label for="mainwp_maximumFileDescriptorsAuto"></label></div><div style="float: left"><i>(<?php _e('Enter a fallback value because not all hosts support this function.','mainwp'); ?>)</i></div><div style="clear:both"></div>
+                    <input type="text" name="mainwp_options_maximumFileDescriptors" id="mainwp_options_maximumFileDescriptors"
+                           value="<?php echo $maximumFileDescriptors; ?>"/><span class="mainwp-form_hint"><?php _e('The maximum number of open file descriptors on the child hosting.  0 sets unlimited.','mainwp'); ?></span>
+                </td>
+            </tr>
+            <tr class="archive_method archive_zip" <?php if ($archiveFormat != 'zip'): ?>style="display: none;"<?php endif; ?>>
+                <th scope="row">Load files in memory before zipping <?php MainWPUtility::renderToolTip('This causes the files to be opened and closed immediately, using less simultaneous I/O operations on the disk. For huge sites with a lot of files we advise to disable this, memory usage will drop but we will use more file handlers when backing up.', 'http://docs.mainwp.com/load-files-memory/'); ?></th>
+                <td>
+                    <input type="radio" name="mainwp_options_loadFilesBeforeZip" id="mainwp_options_loadFilesBeforeZip_global" value="1" <?php if (!isset($task) || $task->loadFilesBeforeZip == false || $task->loadFilesBeforeZip == 1): ?>checked="true"<?php endif; ?>/> Global setting (<a href="<?php echo admin_url('admin.php?page=Settings'); ?>">Change Here</a>)<br />
+                    <input type="radio" name="mainwp_options_loadFilesBeforeZip" id="mainwp_options_loadFilesBeforeZip_yes" value="2" <?php if (isset($task) && $task->loadFilesBeforeZip == 2): ?>checked="true"<?php endif; ?>/> Yes<br />
+                    <input type="radio" name="mainwp_options_loadFilesBeforeZip" id="mainwp_options_loadFilesBeforeZip_no" value="0" <?php if (isset($task) && $task->loadFilesBeforeZip == 0): ?>checked="true"<?php endif; ?>/> No<br />
+                </td>
+            </tr>
         </table>
         </div>
         </div>
@@ -456,7 +560,12 @@ class MainWPManageBackups
 
         do_action('mainwp_update_backuptask', $task->id);
 
-        if (MainWPDB::Instance()->updateBackupTask($task->id, $current_user->ID, $name, $schedule, $type, $excludedFolder, $sites, $groups, $_POST['subfolder'], $_POST['filename'], 0, '', '', '', '', '', 0, 0, '', '', '', '', 0, '', '', '', $_POST['excludebackup'], $_POST['excludecache'], $_POST['excludenonwp'], $_POST['excludezip']) === false)
+        $archiveFormat = isset($_POST['archiveFormat']) ? $_POST['archiveFormat'] : 'site';
+        $maximumFileDescriptorsOverride = $_POST['maximumFileDescriptorsOverride'] == 1;
+        $maximumFileDescriptorsAuto = $_POST['maximumFileDescriptorsAuto'] == 1;
+        $maximumFileDescriptors = isset($_POST['maximumFileDescriptors']) && MainWPUtility::ctype_digit($_POST['maximumFileDescriptors']) ? $_POST['maximumFileDescriptors'] : 150;
+
+        if (MainWPDB::Instance()->updateBackupTask($task->id, $current_user->ID, $name, $schedule, $type, $excludedFolder, $sites, $groups, $_POST['subfolder'], $_POST['filename'], $_POST['excludebackup'], $_POST['excludecache'], $_POST['excludenonwp'], $_POST['excludezip'], $archiveFormat, $maximumFileDescriptorsOverride, $maximumFileDescriptorsAuto, $maximumFileDescriptors, $_POST['loadFilesBeforeZip']) === false)
         {
             die(json_encode(array('error' => 'An unspecified error occured.')));
         }
@@ -502,7 +611,12 @@ class MainWPManageBackups
             }
         }
 
-        $task = MainWPDB::Instance()->addBackupTask($current_user->ID, $name, $schedule, $type, $excludedFolder, $sites, $groups, (isset($_POST['subfolder']) ? $_POST['subfolder'] : ''), $_POST['filename'], 0, $_POST['excludebackup'], $_POST['excludecache'], $_POST['excludenonwp'], $_POST['excludezip']);
+        $archiveFormat = isset($_POST['archiveFormat']) ? $_POST['archiveFormat'] : 'site';
+        $maximumFileDescriptorsOverride = $_POST['maximumFileDescriptorsOverride'] == 1;
+        $maximumFileDescriptorsAuto = $_POST['maximumFileDescriptorsAuto'] == 1;
+        $maximumFileDescriptors = isset($_POST['maximumFileDescriptors']) && MainWPUtility::ctype_digit($_POST['maximumFileDescriptors']) ? $_POST['maximumFileDescriptors'] : 150;
+
+        $task = MainWPDB::Instance()->addBackupTask($current_user->ID, $name, $schedule, $type, $excludedFolder, $sites, $groups, (isset($_POST['subfolder']) ? $_POST['subfolder'] : ''), $_POST['filename'], 0, $_POST['excludebackup'], $_POST['excludecache'], $_POST['excludenonwp'], $_POST['excludezip'], $archiveFormat, $maximumFileDescriptorsOverride, $maximumFileDescriptorsAuto, $maximumFileDescriptors, $_POST['loadFilesBeforeZip']);
         if (!$task)
         {
             die(json_encode(array('error' => 'An unspecified error occured.')));
@@ -518,7 +632,7 @@ class MainWPManageBackups
     public static function executeBackupTask($task, $nrOfSites = 0, $updateRun = true)
     {
         if ($updateRun) MainWPDB::Instance()->updateBackupRun($task->id);
-        MainWPDB::Instance()->updateBackupLast($task->id);
+//        MainWPDB::Instance()->updateBackupLast($task->id);
 
         $task = MainWPDB::Instance()->getBackupTaskById($task->id);
 
@@ -529,7 +643,8 @@ class MainWPManageBackups
 
         $sites = array();
 
-        if ($task->groups == '') {
+        if ($task->groups == '')
+        {
             if ($task->sites != '') $sites = explode(',', $task->sites);
         }
         else
@@ -540,11 +655,12 @@ class MainWPManageBackups
                 $group_sites = MainWPDB::Instance()->getWebsitesByGroupId($groupid);
                 foreach ($group_sites as $group_site)
                 {
+                    if (in_array($group_site->id, $sites)) continue;
                     $sites[] = $group_site->id;
                 }
             }
         }
-        $errorOutput = '';
+        $errorOutput = null;
 
         $lastStartNotification = $task->lastStartNotificationSent;
         if ($updateRun && (get_option('mainwp_notificationOnBackupStart') == 1) && ($lastStartNotification < $task->last_run))
@@ -566,6 +682,7 @@ class MainWPManageBackups
                 $output .= '<strong>Backup Schedule</strong>' . ' - ' . strtoupper($task->schedule) . '<br />';
 
                 wp_mail($email, 'A Scheduled Backup has been Started - MainWP', MainWPUtility::formatEmail($email, $output), 'content-type: text/html');
+                MainWPDB::Instance()->updateBackupTaskWithValues($task->id, array('lastStartNotificationSent' => time()));
             }
         }
 
@@ -580,6 +697,11 @@ class MainWPManageBackups
                 $subfolder = str_replace('%task%', MainWPUtility::sanitize($task->name), $task->subfolder);
 
                 $backupResult = MainWPManageSites::backupSite($siteid, $task, $subfolder);
+
+                //When we receive a timeout, we return false..
+                if ($backupResult === false) continue;
+
+                if ($errorOutput == null) $errorOutput = '';
                 $error = false;
                 $tmpErrorOutput = '';
                 if (isset($backupResult['error']))
@@ -611,6 +733,7 @@ class MainWPManageBackups
             }
             catch (Exception $e)
             {
+                if ($errorOutput == null) $errorOutput = '';
                 $errorOutput .= 'Site: <strong>'.MainWPUtility::getNiceURL($website->url). '</strong><br />';
                 $errorOutput .= MainWPErrorHelper::getErrorMessage($e) . '<br />';
                 $_error_output = MainWPErrorHelper::getErrorMessage($e);
@@ -631,11 +754,11 @@ class MainWPManageBackups
             $completed_sites[$siteid] = true;
             MainWPDB::Instance()->updateCompletedSites($task->id, $completed_sites);
 
-            if (($nrOfSites != 0) && ($nrOfSites == $currentCount)) break;
+            if (($nrOfSites != 0) && ($nrOfSites <= $currentCount)) break;
         }
 
         //update completed sites
-        MainWPDB::Instance()->updateBackupErrors($task->id, $errorOutput);
+        if ($errorOutput != null) MainWPDB::Instance()->updateBackupErrors($task->id, $errorOutput);
 
         if (count($completed_sites) == count($sites))
         {
@@ -652,6 +775,8 @@ class MainWPManageBackups
                         $errorOutput = 'Errors occurred while executing task: <strong>' . $task->name . '</strong><br /><br />' . $task->backup_errors;
 
                         wp_mail($email, 'A Scheduled Backup had an Error - MainWP', MainWPUtility::formatEmail($email, $errorOutput), 'content-type: text/html');
+
+                        MainWPDB::Instance()->updateBackupErrors($task->id, '');
                     }
                 }
             }
@@ -666,7 +791,32 @@ class MainWPManageBackups
 
         $subfolder = str_replace('%task%', MainWPUtility::sanitize($backupTask->name), $backupTask->subfolder);
 
-        return MainWPManageSites::backup($pSiteId, $backupTask->type, $subfolder, $backupTask->exclude, $backupTask->excludebackup, $backupTask->excludecache, $backupTask->excludenonwp, $backupTask->excludezip, $backupTask->filename, $pFileNameUID);
+        if ($backupTask->archiveFormat == 'site')
+        {
+            $loadFilesBeforeZip = false;
+            $maximumFileDescriptorsOverride = false;
+            $maximumFileDescriptorsAuto = false;
+            $maximumFileDescriptors = 150;
+            $archiveFormat = false;
+        }
+        else if ($backupTask->archiveFormat == 'global')
+        {
+            $loadFilesBeforeZip = false;
+            $maximumFileDescriptorsOverride = false;
+            $maximumFileDescriptorsAuto = false;
+            $maximumFileDescriptors = 150;
+            $archiveFormat = 'global';
+        }
+        else
+        {
+            $loadFilesBeforeZip = $backupTask->loadFilesBeforeZip;
+            $maximumFileDescriptorsOverride = ($backupTask->archiveFormat == 'zip') && ($backupTask->maximumFileDescriptorsOverride == 1);
+            $maximumFileDescriptorsAuto = ($backupTask->archiveFormat == 'zip') && ($backupTask->maximumFileDescriptorsAuto == 1);
+            $maximumFileDescriptors = $backupTask->maximumFileDescriptors;
+            $archiveFormat = $backupTask->archiveFormat;
+        }
+
+        return MainWPManageSites::backup($pSiteId, $backupTask->type, $subfolder, $backupTask->exclude, $backupTask->excludebackup, $backupTask->excludecache, $backupTask->excludenonwp, $backupTask->excludezip, $backupTask->filename, $pFileNameUID, $archiveFormat, $maximumFileDescriptorsOverride, $maximumFileDescriptorsAuto, $maximumFileDescriptors, $loadFilesBeforeZip);
     }
 
     public static function getBackupTaskSites($pTaskId)
@@ -684,6 +834,7 @@ class MainWPManageBackups
                 $group_sites = MainWPDB::Instance()->getWebsitesByGroupId($groupid);
                 foreach ($group_sites as $group_site)
                 {
+                    if (in_array($group_site->id, $sites)) continue;
                     $sites[] = $group_site->id;
                 }
             }
@@ -839,12 +990,13 @@ class MainWPManageBackups
         //Backup buddy
         $newExcludes[] = 'wp-content/uploads/backupbuddy_backups';
         $newExcludes[] = 'wp-content/uploads/backupbuddy_temp';
+        $newExcludes[] = 'wp-content/uploads/pb_backupbuddy';
 
         //ManageWP
         $newExcludes[] = 'wp-content/managewp';
 
         //InfiniteWP
-        $newExcludes[] = 'wp-content/infinitewp/backups';
+        $newExcludes[] = 'wp-content/infinitewp';
 
         //WordPress Backup to Dropbox
         $newExcludes[] = 'wp-content/backups';
@@ -1056,8 +1208,10 @@ class MainWPManageBackups
 
         MainWPManageSites::showBackups($website);
         ?>
+        <?php if (mainwp_current_user_can("dashboard", "execute_backups")) { ?>
         <hr />
         <div style="text-align: center;"><a href="<?php echo admin_url('admin.php?page=managesites&backupid='.$website->id); ?>" class="button-primary"><?php _e('Backup Now','mainwp'); ?></a></div>
+        <?php } ?>
         <?php
     }
 
@@ -1086,7 +1240,7 @@ class MainWPManageBackups
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/12/backup-type.png" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                     <li>
-                                        In case you donâ€™t need all files to be included in backup, click the EXCLUDE FILES link, this will show your site file map and you will be able to easily exclude any files and folders<br/><br/>
+                                        In case you don't need all files to be included in backup, click the EXCLUDE FILES link, this will show your site file map and you will be able to easily exclude any files and folders<br/><br/>
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/12/exclude-files.png" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                     <li>
@@ -1123,7 +1277,7 @@ class MainWPManageBackups
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/12/drobbox-allow.png" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                     <li>
-                                        After you get the success message, return to dashboard and click the Yes, Iâ€™ve authorized MainWP to Dropbox button <br/><br/>
+                                        After you get the success message, return to dashboard and click the Yes, I've authorized MainWP to Dropbox button <br/><br/>
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/12/dropbox-authorized.png" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                     <li>
@@ -1181,7 +1335,7 @@ class MainWPManageBackups
                             <p>
                                 <ol>
                                     <li>
-                                        Go to the Settings page and set the â€œExecute backuptasks in chunksâ€ option to YES <br/><br/>
+                                        Go to the Settings page and set the 'Execute backuptasks in chunks' option to YES <br/><br/>
                                         <img src="http://docs.mainwp.com/wp-content/uploads/2013/11/settings-chunk-backups-1024x227.jpg" style="wight: 100% !important;" alt="screenshot"/>
                                     </li>
                                 </ol>

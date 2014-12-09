@@ -8,9 +8,9 @@ class MainWPManageGroups
 
     public static function initMenu()
     {
-        add_submenu_page('mainwp_tab', __('Groups','mainwp'), '<span id="mainwp-Groups">'. __('Groups','mainwp') .'</span>', 'read', 'ManageGroups', array(MainWPManageGroups::getClassName(), 'renderAllGroups'));
-        add_submenu_page('mainwp_tab', __('Asdd New Group','mainwp'), '<div class="mainwp-hidden">Add New</div>', 'read', 'ManageGroupsAddNew', array(MainWPManageGroups::getClassName(), 'renderNewGroup'));
-        add_submenu_page('mainwp_tab', __('Groups Help','mainwp'), '<div class="mainwp-hidden">Groups Help</div>', 'read', 'GroupsHelp', array(MainWPManageGroups::getClassName(), 'QSGManageGroups'));
+        add_submenu_page('mainwp_tab', __('Groups','mainwp'), '<div id="mainwp-Groups" class="mainwp-hidden">'. __('Groups','mainwp') .'</div>', 'read', 'ManageGroups', array(MainWPManageGroups::getClassName(), 'renderAllGroups'));
+        add_submenu_page('mainwp_tab', __('Add New Group','mainwp'), '<div class="mainwp-hidden">Add New</div>', 'read', 'ManageGroupsAddNew', array(MainWPManageGroups::getClassName(), 'renderNewGroup'));
+        add_submenu_page('mainwp_tab', __('Groups Help','mainwp'), '<div class="mainwp-hidden">Groups Help</div>', 'read', 'GroupsHelp', array(MainWPManageGroups::getClassName(), 'QSGManageGroups'));    
     }
 
     private static function renderHeader($pManage)
@@ -18,23 +18,27 @@ class MainWPManageGroups
         ?>
         <img src="<?php echo plugins_url('images/icons/mainwp-group.png', dirname(__FILE__)); ?>" style="float: left; margin-right: 8px; margin-top: 7px ;" alt="MainWP Groups" height="32"/>
         <h2>Groups</h2><div style="clear: both;"></div><br/>
-        <div class="mainwp-tabs" id="mainwp-tabs">
-                <a class="nav-tab pos-nav-tab <?php if ($pManage) { echo "nav-tab-active"; } ?>" href="admin.php?page=ManageGroups"><?php _e('Manage','mainwp'); ?></a>
-                <a style="float: right" class="mainwp-help-tab nav-tab pos-nav-tab" href="admin.php?page=GroupsHelp"><?php _e('Help','mainwp'); ?></a>
+        <div class="mainwp-tabs" id="mainwp-tabs">            
+            <a class="nav-tab pos-nav-tab <?php if ($pManage) { echo "nav-tab-active"; } ?>" href="admin.php?page=ManageGroups"><?php _e('Manage','mainwp'); ?></a>            
+            <a style="float: right" class="mainwp-help-tab nav-tab pos-nav-tab" href="admin.php?page=GroupsHelp"><?php _e('Help','mainwp'); ?></a>
         </div>
         <?php
     }
 
     public static function renderAllGroups() {
+        if (!mainwp_current_user_can("dashboard", "manage_groups")) {
+            mainwp_do_not_have_permissions("manage groups");
+            return;
+        }                
         ?>
-        <div class="wrap"><a href="http://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP" /></a>
-            <?php self::renderHeader(true, false); ?>
-
-            <div id="mainwp_wrap-inside">
+        <div class="wrap">
+            <?php do_action("mainwp-pageheader-sites", "ManageGroups"); ?>
                 <div class="mainwp_managegroups-outsidebox">
                     <span id="mainwp_managegroups-addnew-container"><input type="button" name="Add new" value="<?php _e('Add New','mainwp'); ?>" class="managegroups-addnew button" /></span>
                     <h3><?php _e('Groups','mainwp'); ?></h3>
                     <div class="mainwp_managegroups-insidebox">
+                        <input id="managegroups-filter" style="margin-top: .5em;" type="text" value="" placeholder="Type here to filter groups" />
+                        <hr>
                         <ul id="managegroups-list">
                             <li class="managegroups-listitem managegroups-group-add hidden">
                                 <span class="mainwp_group-actions actions-input"><a href="#" class="managegroups-savenew"><?php _e('Save','mainwp'); ?></a> | <a href="#" class="managegroups-cancel"><?php _e('Cancel','mainwp'); ?></a></span>
@@ -49,7 +53,10 @@ class MainWPManageGroups
                     <div style="float: right; margin-top: 12px;"><?php _e('Display by:','mainwp'); ?> <a href="#" class="mainwp_action left mainwp_action_down" id="group_sites_by_name"><strong><?php _e('Site Name','mainwp'); ?></strong></a><a href="#" class="mainwp_action right" id="group_sites_by_url"><?php _e('URL','mainwp'); ?></a></div>
                     <h3><?php _e('Websites','mainwp'); ?></h3>
                     <div class="mainwp_managegroups-insidebox" id="managegroups-sites-list">
-                        <ul>
+                        <input id="managegroups_site-filter" style="margin-top: .5em;" type="text" value="" placeholder="Type here to filter sites" />
+                        <div style="float:right; margin-top: .7em"><?php _e('Select: ','mainwp'); ?><a href="#" onClick="return mainwp_managegroups_ss_select(this, true)"><?php _e('All','mainwp'); ?></a> | <a href="#" onClick="return mainwp_managegroups_ss_select(this, false)"><?php _e('None','mainwp'); ?></a></div>
+                        <hr>
+                        <ul id="managegroups-listsites">
                             <?php echo MainWPManageGroups::getWebsiteListContent(); ?>
                         </ul>
                     </div>
@@ -57,8 +64,8 @@ class MainWPManageGroups
                 <div style="clear: both;"></div>
                 <br />
                 <input type="button" name="Save selection" value="<?php _e('Save Selection','mainwp'); ?>" class="managegroups-saveAll button-primary" /> <span id="managegroups-saved"><?php _e('Saved','mainwp'); ?></span>
-            </div>
         </div>
+        <?php do_action("mainwp-pagefooter-sites", "ManageGroups"); ?>
         <script type="text/javascript">
             jQuery(document).ready(function () {
                 jQuery('#group_sites_by_name').live('click', function(event)
@@ -287,7 +294,7 @@ class MainWPManageGroups
         while ($websites && ($website = @MainWPDB::fetch_object($websites)))
         {
             ?>
-            <li><input type="checkbox" name="sites" value="<?php echo $website->id; ?>" id="<?php echo MainWPUtility::getNiceURL($website->url); ?>" class="mainwp-checkbox2"><label for="<?php echo MainWPUtility::getNiceURL($website->url); ?>" class="mainwp-label2"><span class="website_url" style="display: none;"><?php echo MainWPUtility::getNiceURL($website->url); ?></span><span class="website_name"><?php echo $website->name; ?></span></label></li>
+            <li class="managegroups_site-listitem"><input type="checkbox" name="sites" value="<?php echo $website->id; ?>" id="<?php echo MainWPUtility::getNiceURL($website->url); ?>" class="mainwp-checkbox2"><label for="<?php echo MainWPUtility::getNiceURL($website->url); ?>" class="mainwp-label2"><span class="website_url" style="display: none;"><?php echo MainWPUtility::getNiceURL($website->url); ?></span><span class="website_name"><?php echo $website->name; ?></span></label></li>
             <?php
         }
         @MainWPDB::free_result($websites);
@@ -409,7 +416,7 @@ class MainWPManageGroups
 
     public static function QSGManageGroups() {
     ?>
-    <div class="wrap"><a href="http://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP" /></a>
+    <div class="wrap"><a href="https://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP" /></a>
             <?php self::renderHeader(true, false); ?>
 
             <div id="mainwp_wrap-inside"><div style="text-align: center"><a href="#" class="button button-primary" id="mainwp-quick-start-guide"><?php _e('Show Quick Start Guide','mainwp'); ?></a></div>

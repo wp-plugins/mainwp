@@ -42,9 +42,10 @@ class MainWPPage
             <div class="wp-submenu sub-open" style="">
                 <div class="mainwp_boxout">
                     <div class="mainwp_boxoutin"></div>
-                    <a href="<?php echo admin_url('admin.php?page=PageBulkManage'); ?>" class="mainwp-submenu"><?php _e('All
-                        Pages','mainwp'); ?></a>
+                    <?php if (mainwp_current_user_can("dashboard", "manage_pages")) { ?>
+                    <a href="<?php echo admin_url('admin.php?page=PageBulkManage'); ?>" class="mainwp-submenu"><?php _e('Manage Pages','mainwp'); ?></a>                    
                     <a href="<?php echo admin_url('admin.php?page=PageBulkAdd'); ?>" class="mainwp-submenu"><?php _e('Add New','mainwp'); ?></a>
+                    <?php } ?>
                         <?php
                         if (isset(self::$subPages) && is_array(self::$subPages))
                         {
@@ -69,12 +70,19 @@ class MainWPPage
     {
         ?>
         <div class="wrap">
-        <a href="http://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP" /></a>
+        <a href="https://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP" /></a>
         <img src="<?php echo plugins_url('images/icons/mainwp-page.png', dirname(__FILE__)); ?>" style="float: left; margin-right: 8px; margin-top: 7px ;" alt="MainWP Page" height="32"/>
         <h2><?php _e('Pages','mainwp'); ?></h2><div style="clear: both;"></div><br/>
+        <div id="mainwp-tip-zone">
+          <?php if ($shownPage == 'BulkManage') { ?> 
+                <div class="mainwp-tips mainwp_info-box-blue"><span class="mainwp-tip"><strong><?php _e('MainWP Tip','mainwp'); ?>: </strong><?php _e('You can also quickly see all Published, Draft, Pending and Trash Pages for a single site from your Individual Site Dashboard Recent Pages widget by visiting Sites &rarr; Manage Sites &rarr; Child Site &rarr; Dashboard.','mainwp'); ?></span><span><a href="#" class="mainwp-dismiss" ><?php _e('Dismiss','mainwp'); ?></a></span></div>
+          <?php } ?>
+        </div>
         <div class="mainwp-tabs" id="mainwp-tabs">
-                <a class="nav-tab pos-nav-tab <?php if ($shownPage === 'BulkManage') { echo "nav-tab-active"; } ?>" href="admin.php?page=PageBulkManage"><?php _e('Manage','mainwp'); ?></a>
+                <?php if (mainwp_current_user_can("dashboard", "manage_pages")) { ?>
+                <a class="nav-tab pos-nav-tab <?php if ($shownPage === 'BulkManage') { echo "nav-tab-active"; } ?>" href="admin.php?page=PageBulkManage"><?php _e('Manage','mainwp'); ?></a>                
                 <a class="nav-tab pos-nav-tab <?php if ($shownPage === 'BulkAdd') { echo "nav-tab-active"; } ?>" href="admin.php?page=PageBulkAdd"><?php _e('Add New','mainwp'); ?></a>
+                <?php } ?>
                 <a style="float: right" class="mainwp-help-tab nav-tab pos-nav-tab <?php if ($shownPage === 'PagesHelp') { echo "nav-tab-active"; } ?>" href="admin.php?page=PagesHelp"><?php _e('Help','mainwp'); ?></a>
 
                 <?php
@@ -107,6 +115,11 @@ class MainWPPage
     
     public static function render()
     {
+        if (!mainwp_current_user_can("dashboard", "manage_pages")) {
+            mainwp_do_not_have_permissions ("manage pages");
+            return;
+        }
+        
         $cachedSearch = MainWPCache::getCachedContext('Page');
 
         //Loads the page screen via AJAX, which redirects to the "posting()" to really post the posts to the saved sites
@@ -116,9 +129,9 @@ class MainWPPage
             <div class="mainwp_info-box"><strong><?php _e('Use this to bulk change pages. To add new pages click on the "Add New" tab.','mainwp'); ?></strong></div>
         <br/>
         <div class="mainwp-search-form">
-            <?php MainWPUI::select_sites_box(__("Select Sites", 'mainwp'), 'checkbox', true, true, 'mainwp_select_sites_box_right'); ?>
-
-            <h3><?php _e('Search Pages','mainwp'); ?></h3>
+               <div class="postbox mainwp-postbox">
+            <h3 class="mainwp_box_title"><?php _e('Search Pages','mainwp'); ?></h3>
+            <div class="inside">
             <ul class="mainwp_checkboxes">
                 <li>
                     <input type="checkbox" id="mainwp_page_search_type_publish" <?php echo ($cachedSearch == null || ($cachedSearch != null && in_array('publish', $cachedSearch['status']))) ? 'checked="checked"' : ''; ?> class="mainwp-checkbox2"/>
@@ -147,15 +160,19 @@ class MainWPPage
             </ul>
             <p>
                 <?php _e('Containing Keyword:','mainwp'); ?><br />
-                <input type="text" id="mainwp_page_search_by_keyword" size="50" value="<?php if ($cachedSearch != null) { echo $cachedSearch['keyword']; } ?>"/>
+                <input type="text" id="mainwp_page_search_by_keyword" class="mainwp-field mainwp-keyword" size="50" value="<?php if ($cachedSearch != null) { echo $cachedSearch['keyword']; } ?>"/>
             </p>
             <p>
                 <?php _e('Date Range:','mainwp'); ?><br />
-                <input type="text" id="mainwp_page_search_by_dtsstart" class="mainwp_datepicker" size="12" value="<?php if ($cachedSearch != null) { echo $cachedSearch['dtsstart']; } ?>"/> to <input type="text" id="mainwp_page_search_by_dtsstop" class="mainwp_datepicker" size="12" value="<?php if ($cachedSearch != null) { echo $cachedSearch['dtsstop']; } ?>"/>
+                <input type="text" id="mainwp_page_search_by_dtsstart" class="mainwp_datepicker  mainwp-field mainwp-date" size="12" value="<?php if ($cachedSearch != null) { echo $cachedSearch['dtsstart']; } ?>"/> to <input type="text" id="mainwp_page_search_by_dtsstop" class="mainwp_datepicker  mainwp-field mainwp-date" size="12" value="<?php if ($cachedSearch != null) { echo $cachedSearch['dtsstop']; } ?>"/>
             </p>
-            <p>&nbsp;</p>
+             </div>
+            </div>
+            <?php MainWPUI::select_sites_box(__("Select Sites", 'mainwp'), 'checkbox', true, true, 'mainwp_select_sites_box_left'); ?>
+            <div style="clear: both;"></div>
             <input type="button" name="mainwp_show_pages" id="mainwp_show_pages" class="button-primary" value="<?php _e('Show Pages','mainwp'); ?>"/>
             <span id="mainwp_pages_loading">&nbsp;<em><?php _e('Grabbing information from Child Sites','mainwp') ?></em>&nbsp;&nbsp;<img src="<?php echo plugins_url('images/loader.gif', dirname(__FILE__)); ?>"/></span>
+            <br/><br/>
         </div>
         <div class="clear"></div>
 
@@ -469,6 +486,11 @@ class MainWPPage
 
     public static function renderBulkAdd()
     {
+        if (!mainwp_current_user_can("dashboard", "manage_pages")) {            
+            mainwp_do_not_have_permissions("manage pages");
+            return;
+        }
+        
         $src = get_site_url() . '/wp-admin/post-new.php?post_type=bulkpage&hideall=1';        
         $src = apply_filters('mainwp_bulkpost_edit_source', $src);
         //Loads the post screen via AJAX, which redirects to the "posting()" to really post the posts to the saved sites
@@ -488,111 +510,138 @@ class MainWPPage
     <div class="wrap">
         <?php //self::renderHeader(false, true); ?>
       <?php //  Use this to add a new page. To bulk change pages click on the "Manage" tab.
-                 
-        //Posts the saved sites
-        if (isset($_GET['id'])) {
-            $id = $_GET['id'];
-            $post = get_post($id);
-            if ($post) {
-                $selected_by = get_post_meta($id, '_selected_by', true);
-                $selected_sites = unserialize(base64_decode(get_post_meta($id, '_selected_sites', true)));
-                $selected_groups = unserialize(base64_decode(get_post_meta($id, '_selected_groups', true)));               
-                $post_slug = base64_decode(get_post_meta($id, '_slug', true));
-                $post_custom = get_post_custom($id);
-                include_once(ABSPATH . 'wp-includes' . DIRECTORY_SEPARATOR . 'post-thumbnail-template.php');
-                $post_featured_image = get_post_thumbnail_id($id);
-                $mainwp_upload_dir = wp_upload_dir();
-//                $results = apply_filters('mainwp-pre-posting-posts', array($post), true);
-//                $post = $results[0];    
-                $new_post = array(                    
-                    'post_title' => $post->post_title,
-                    'post_content' => $post->post_content,
-                    'post_status' => $post->post_status, //was 'publish'
-                    'post_date' => $post->post_date,
-                    'post_date_gmt' => $post->post_date_gmt,
-                    'post_type' => 'page',
-                    'post_name' => $post_slug,
-                    'post_excerpt' => $post->post_excerpt,
-                    'comment_status' => $post->comment_status,
-                    'ping_status' => $post->ping_status,
-                    'id_spin' => $post->ID,
-                );
+          
+        do_action("mainwp_bulkpage_before_post", $_GET['id']);               
+        
+        $skip_post = false;
+        if (isset($_GET['id'])) {              
+           if ('yes' == get_post_meta($_GET['id'], '_mainwp_skip_posting', true)) {
+                $skip_post = true;
+                wp_delete_post($_GET['id'], true);              
+           }           
+        }       
+       
+        if (!$skip_post) {
+            //Posts the saved sites
+            if (isset($_GET['id'])) {
+                $id = $_GET['id'];
+                $post = get_post($id);
+                if ($post) {
+                    $selected_by = get_post_meta($id, '_selected_by', true);
+                    $selected_sites = unserialize(base64_decode(get_post_meta($id, '_selected_sites', true)));
+                    $selected_groups = unserialize(base64_decode(get_post_meta($id, '_selected_groups', true)));               
+                    $post_slug = base64_decode(get_post_meta($id, '_slug', true));
+                    $post_custom = get_post_custom($id);
+                    include_once(ABSPATH . 'wp-includes' . DIRECTORY_SEPARATOR . 'post-thumbnail-template.php');
+                    $post_featured_image = get_post_thumbnail_id($id);
+                    $mainwp_upload_dir = wp_upload_dir();
+    //                $results = apply_filters('mainwp-pre-posting-posts', array($post), true);
+    //                $post = $results[0];    
+                    $new_post = array(                    
+                        'post_title' => $post->post_title,
+                        'post_content' => $post->post_content,
+                        'post_status' => $post->post_status, //was 'publish'
+                        'post_date' => $post->post_date,
+                        'post_date_gmt' => $post->post_date_gmt,
+                        'post_type' => 'page',
+                        'post_name' => $post_slug,
+                        'post_excerpt' => $post->post_excerpt,
+                        'comment_status' => $post->comment_status,
+                        'ping_status' => $post->ping_status,
+                        'id_spin' => $post->ID,
+                    );
 
-                if ($post_featured_image != null) { //Featured image is set, retrieve URL
-                    $img = wp_get_attachment_image_src($post_featured_image, 'full');
-                    $post_featured_image = $img[0];
-                }
-
-                $dbwebsites = array();
-                if ($selected_by == 'site') { //Get all selected websites
-                    foreach ($selected_sites as $k) {
-                        if (MainWPUtility::ctype_digit($k)) {
-                            $website = MainWPDB::Instance()->getWebsiteById($k);
-                            $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
-                        }
+                    if ($post_featured_image != null) { //Featured image is set, retrieve URL
+                        $img = wp_get_attachment_image_src($post_featured_image, 'full');
+                        $post_featured_image = $img[0];
                     }
-                } else { //Get all websites from the selected groups
-                    foreach ($selected_groups as $k) {
-                        if (MainWPUtility::ctype_digit($k)) {
-                            $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($k));
-                            while ($websites && ($website = @MainWPDB::fetch_object($websites)))
-                            {
-                                if ($website->sync_errors != '') continue;
+
+                    $dbwebsites = array();
+                    if ($selected_by == 'site') { //Get all selected websites
+                        foreach ($selected_sites as $k) {
+                            if (MainWPUtility::ctype_digit($k)) {
+                                $website = MainWPDB::Instance()->getWebsiteById($k);
                                 $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
                             }
-                            @MainWPDB::free_result($websites);
+                        }
+                    } else { //Get all websites from the selected groups
+                        foreach ($selected_groups as $k) {
+                            if (MainWPUtility::ctype_digit($k)) {
+                                $websites = MainWPDB::Instance()->query(MainWPDB::Instance()->getSQLWebsitesByGroupId($k));
+                                while ($websites && ($website = @MainWPDB::fetch_object($websites)))
+                                {
+                                    if ($website->sync_errors != '') continue;
+                                    $dbwebsites[$website->id] = MainWPUtility::mapSite($website, array('id', 'url', 'name', 'adminname', 'nossl', 'privkey', 'nosslkey'));
+                                }
+                                @MainWPDB::free_result($websites);
+                            }
                         }
                     }
-                }
 
-                $output = new stdClass();
-                $output->ok = array();
-                $output->errors = array();
+                    $output = new stdClass();
+                    $output->ok = array();
+                    $output->errors = array();
 
-                if (count($dbwebsites) > 0) {
-                    $post_data = array(
-                        'new_post' => base64_encode(serialize($new_post)),
-                        'post_custom' => base64_encode(serialize($post_custom)),
-                        'post_featured_image' => base64_encode($post_featured_image),
-                        'mainwp_upload_dir' => base64_encode(serialize($mainwp_upload_dir))
-                    );
-                    MainWPUtility::fetchUrlsAuthed($dbwebsites, 'newpost', $post_data, array(MainWPBulkAdd::getClassName(), 'PostingBulk_handler'), $output);
-                }
-
-                foreach ($dbwebsites as $website)
-                {
-                    if (($output->ok[$website->id] == 1) && (isset($output->added_id[$website->id])))
-                    {
-                        do_action('mainwp-post-posting-page', $website, $output->added_id[$website->id], (isset($output->link[$website->id]) ? $output->link[$website->id] : null));
-                        do_action('mainwp-bulkposting-done', $post, $website, $output);
+                    if (count($dbwebsites) > 0) {
+                        $post_data = array(
+                            'new_post' => base64_encode(serialize($new_post)),
+                            'post_custom' => base64_encode(serialize($post_custom)),
+                            'post_featured_image' => base64_encode($post_featured_image),
+                            'mainwp_upload_dir' => base64_encode(serialize($mainwp_upload_dir))
+                        );
+                        $post_data = apply_filters("mainwp_bulkpage_posting", $post_data, $id);
+                        MainWPUtility::fetchUrlsAuthed($dbwebsites, 'newpost', $post_data, array(MainWPBulkAdd::getClassName(), 'PostingBulk_handler'), $output);
                     }
+
+                    $failed_posts = array(); 
+                    foreach ($dbwebsites as $website)
+                    {
+                        if (($output->ok[$website->id] == 1) && (isset($output->added_id[$website->id])))
+                        {
+                            do_action('mainwp-post-posting-page', $website, $output->added_id[$website->id], (isset($output->link[$website->id]) ? $output->link[$website->id] : null));
+                            do_action('mainwp-bulkposting-done', $post, $website, $output);
+                        } else {
+                            $failed_posts[] =  $website->id;
+                        } 
+                    }
+
+                    $del_post = true;
+                    $saved_draft = get_post_meta($id, "_saved_as_draft", true);
+                    if ($saved_draft == "yes") {
+                        if (count($failed_posts) > 0) {
+                            $del_post = false;
+                            update_post_meta($post->ID, "_selected_sites", base64_encode(serialize($failed_posts)));
+                            update_post_meta($post->ID, "_selected_groups", "");
+                            wp_update_post( array("ID" => $id, 'post_status' => 'draft') ); 
+                        }
+                    }
+
+                    if ($del_post)    
+                        wp_delete_post($id, true);                 
                 }
-                wp_delete_post($id, true);                
+                ?>
+                <div id="message" class="updated">
+                    <?php foreach ($dbwebsites as $website) { ?>
+                    <p><a href="<?php echo admin_url('admin.php?page=managesites&dashboard=' . $website->id); ?>"><?php echo $website->name; ?></a>
+                        : <?php echo (isset($output->ok[$website->id]) && $output->ok[$website->id] == 1 ? 'New page created. '."<a href=\"".$output->link[$website->id]."\"  target=\"_blank\">View Page</a>" : 'ERROR: ' . $output->errors[$website->id]); ?></p>
+                    <?php } ?>
+                </div>
+               
+                <?php
+            } else {
+                ?>
+                <div class="error below-h2">
+                    <p><strong>ERROR</strong>: <?php _e('An undefined error occured.','mainwp'); ?></p>
+                </div>               
+                <?php
             }
-            ?>
-            <div id="message" class="updated">
-                <?php foreach ($dbwebsites as $website) { ?>
-                <p><?php echo $website->name; ?>
-                    : <?php echo (isset($output->ok[$website->id]) && $output->ok[$website->id] == 1 ? 'New page created. '."<a href=\"".$output->link[$website->id]."\"  target=\"_blank\">View Page</a>" : 'ERROR: ' . $output->errors[$website->id]); ?></p>
-                <?php } ?>
-            </div>
-            <br/>
-            <a href="<?php echo get_admin_url() ?>admin.php?page=PageBulkAdd" class="add-new-h2" target="_top"><?php _e('Add New','mainwp'); ?></a>
-            <a href="<?php echo get_admin_url() ?>admin.php?page=mainwp_tab" class="add-new-h2" target="_top"><?php _e('Return
-                to Dashboard','mainwp'); ?></a>
-            <?php
-        } else {
-            ?>
-            <div class="error below-h2">
-                <p><strong>ERROR</strong>: <?php _e('An undefined error occured.','mainwp'); ?></p>
-            </div>
-            <br/>
-            <a href="<?php echo get_admin_url() ?>admin.php?page=PageBulkAdd" class="add-new-h2" target="_top"><?php _e('Add New','mainwp'); ?></a>
-            <a href="<?php echo get_admin_url() ?>admin.php?page=mainwp_tab" class="add-new-h2" target="_top"><?php _e('Return
-                to Dashboard','mainwp'); ?></a>
-            <?php
-        }
+        } // no skip posting
         ?>
+        <br/>
+        <a href="<?php echo get_admin_url() ?>admin.php?page=PageBulkAdd" class="add-new-h2" target="_top"><?php _e('Add New','mainwp'); ?></a>
+        <a href="<?php echo get_admin_url() ?>admin.php?page=mainwp_tab" class="add-new-h2" target="_top"><?php _e('Return
+            to Dashboard','mainwp'); ?></a>
+                
     </div>
     <?php
     }

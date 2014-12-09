@@ -8,17 +8,17 @@ class MainWPAPISettingsView
 
     public static function maximumInstallationsReached()
     {
-        return __('Maximum number of main installations on your MainWP plan have been reached. <a href="http://mainwp.com/member/login/index" target="_blank">Upgrade your plan for more sites</a>','mainwp');
+        return __('Maximum number of main installations on your MainWP plan have been reached. <a href="https://mainwp.com/member/login/index" target="_blank">Upgrade your plan for more sites</a>','mainwp');
     }
 
     public static function render()
     {
         $username = get_option("mainwp_api_username");
-        $password = get_option("mainwp_api_password");
+        $password = MainWPUtility::decrypt(get_option('mainwp_api_password'), 'MainWPAPI');
         $userExtension = MainWPDB::Instance()->getUserExtension();
         $pluginDir = (($userExtension == null) || (($userExtension->pluginDir == null) || ($userExtension->pluginDir == '')) ? 'default' : $userExtension->pluginDir);
         ?>
-    <div class="wrap"><a href="http://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img
+    <div class="wrap"><a href="https://mainwp.com" id="mainwplogo" title="MainWP" target="_blank"><img
             src="<?php echo plugins_url('images/logo.png', dirname(__FILE__)); ?>" height="50" alt="MainWP"/></a>
         <img src="<?php echo plugins_url('images/icons/mainwp-passwords.png', dirname(__FILE__)); ?>"
              style="float: left; margin-right: 8px; margin-top: 7px ;" alt="MainWP Password" height="32"/>
@@ -28,14 +28,7 @@ class MainWPAPISettingsView
         <div id="mainwp_api_errors" class="mainwp_error error" style="display: none"></div>
         <div id="mainwp_api_message" class="mainwp_updated updated" style="display: none"></div>
         <br />
-        <div id="" class="mainwp_info-box-red"><font size="3"><strong><?php _e('Stop, before installing!','mainwp'); ?></strong></font><br/><br/>
 
-                            <strong><?php _e('We HIGHLY recommend a NEW WordPress install for your Main Dashboard.','mainwp'); ?></strong><br/><br/>
-
-                            <?php _e('Using a new WordPress install will help to cut down on Plugin Conflicts and other issues that can be caused by trying to run your MainWP Main Dashboard off an active site. Most hosting companies provide free subdomains ("<strong>demo.yourdomain.com</strong>") and we recommend creating one if you do not have a specific dedicated domain to run your Network Main Dashboard.<br/><br/>
-
-                            If you are not sure how to set up a subdomain here is a quick step by step with <a href="http://docs.mainwp.com/creating-a-subdomain-in-cpanel/">cPanel</a>, <a href="http://docs.mainwp.com/creating-a-subdomain-in-plesk/">Plesk</a> or <a href="http://docs.mainwp.com/creating-a-subdomain-in-directadmin-control-panel/">Direct Admin</a>. If you are not sure what you have, contact your hosting companies support.','mainwp'); ?></div>
-        <br />
         <h3><?php _e('Initial MainWP Settings','mainwp'); ?></h3>
         <table class="form-table">
             <tbody>
@@ -88,36 +81,28 @@ class MainWPAPISettingsView
 
     public static function renderSettings() {
         $username = get_option("mainwp_api_username");
-        $password = get_option("mainwp_api_password");
+        $password = MainWPUtility::decrypt(get_option('mainwp_api_password'), 'MainWPAPI');
         ?>
         <div class="postbox" id="mainwp-account-information">
         <h3 class="mainwp_box_title"><span><?php _e('MainWP Account Information','mainwp'); ?></span></h3>
         <div class="inside">
         <div id="mainwp_api_errors" class="mainwp_error error" style="display: none"></div>
         <div id="mainwp_api_message" class="mainwp_updated updated" style="display: none"></div>
-        
-        <div id="" class="mainwp_info-box-red"><font size="3"><strong><?php _e('Stop, before installing!','mainwp'); ?></strong></font><br/><br/>
 
-                            <strong><?php _e('We HIGHLY recommend a NEW WordPress install for your Main Dashboard.','mainwp'); ?></strong><br/><br/>
-
-                            <?php _e('Using a new WordPress install will help to cut down on Plugin Conflicts and other issues that can be caused by trying to run your MainWP Main Dashboard off an active site. Most hosting companies provide free subdomains ("<strong>demo.yourdomain.com</strong>") and we recommend creating one if you do not have a specific dedicated domain to run your Network Main Dashboard.<br/><br/>
-
-                            If you are not sure how to set up a subdomain here is a quick step by step with <a href="http://docs.mainwp.com/creating-a-subdomain-in-cpanel/">cPanel</a>, <a href="http://docs.mainwp.com/creating-a-subdomain-in-plesk/">Plesk</a> or <a href="http://docs.mainwp.com/creating-a-subdomain-in-directadmin-control-panel/">Direct Admin</a>. If you are not sure what you have, contact your hosting companies support.','mainwp'); ?></div>
-        <br />
-        <h3 style="border-bottom: none !important;"><?php _e('MainWP Account - <em>Required for Support, Extensions, Ideas and Automated Cron Jobs</em>','mainwp'); ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://mainwp.com/dashboard-signup" target="_blank" class="button button-primary mainwp-upgrade-button button-hero" style="margin-top: -1em"><?php _e('Create MainWP Account', 'mainwp'); ?></a></h3>
+        <h3 style="border-bottom: none !important;"><?php _e('MainWP Account - <em>Required for Support, Extensions, Ideas and Automated Cron Jobs</em>','mainwp'); ?>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://mainwp.com/dashboard-signup" target="_blank" class="button button-primary mainwp-upgrade-button button-hero" style="margin-top: -1em"><?php _e('Create MainWP Account', 'mainwp'); ?></a></h3>
         <table class="form-table">
             <tbody>
             <tr>
                 <th scope="row"><label for="mainwp_api_username"><?php _e('Username','mainwp'); ?></label></th>
                 <td>
-                    <input type="text" name="mainwp_api_username" id="mainwp_api_username" size="35"
+                    <input type="text" name="mainwp_api_username" class="mainwp-field mainwp-username" id="mainwp_api_username" size="35"
                            value="<?php echo $username; ?>"/>
                 </td>
             </tr>
             <tr>
                 <th scope="row"><label for="mainwp_api_password"><?php _e('Password','mainwp'); ?></label></th>
                 <td>
-                    <input type="password" name="mainwp_api_password" id="mainwp_api_password" size="35"
+                    <input type="password" name="mainwp_api_password" class="mainwp-field mainwp-password" id="mainwp_api_password" size="35"
                            value="<?php echo $password; ?>"/>
                 </td>
             </tr>
