@@ -25,26 +25,8 @@ class MainWPExtensions
 
         return $pSlug;
     }
-
-    public static function getSlugs()
-    {
-        $currentExtensions = (self::$extensionsLoaded ? self::$extensions : get_option('mainwp_extensions'));
-
-        if (!is_array($currentExtensions) || empty($currentExtensions)) return '';
-
-        $out = '';
-        foreach ($currentExtensions as $extension)
-        {
-            if (!isset($extension['api']) || $extension['api'] == '') continue;
-
-            if ($out != '') $out .= ',';
-            $out .= $extension['api'];
-        }
-
-        return ($out == '' ? '' : $out);
-    }
     
-    public static function getSlugsTwo()
+    public static function getSlugs()
     {
         $currentExtensions = (self::$extensionsLoaded ? self::$extensions : get_option('mainwp_extensions'));
 
@@ -559,10 +541,12 @@ class MainWPExtensions
         {
             foreach($extensions as $extension)
             {
-                if (isset($extension['api']) && ($extension['api'] == $pAPI))
+                $slug = dirname($extension['slug']);
+                if ($slug == $pAPI)
                 {
                     $pluginFile = $extension['plugin'];
-                    return self::isExtensionEnabled($pluginFile);
+                    $result = self::isExtensionEnabled($pluginFile);                    
+                    return ($result === false) ? false : true;
                 }                
             }
         }

@@ -77,7 +77,7 @@ class MainWPUtility
             $verifyCertificate = null;
         }
         
-        if (!MainWPUtility::isDomainValid($url)) return false;
+        if (!self::isDomainValid($url)) return false;
 
         return MainWPUtility::tryVisit($url, $verifyCertificate);
     }
@@ -130,17 +130,46 @@ class MainWPUtility
             @curl_setopt ($ch, CURLOPT_SSL_VERIFYHOST, false);
             @curl_setopt ($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
-        
-        $data = curl_exec($ch);
+
+
+        $disabled_functions = ini_get('disable_functions');
+        if (empty($disabled_functions) || (stristr($disabled_functions, 'curl_multi_exec') === false))
+        {
+            $mh = curl_multi_init();
+            @curl_multi_add_handle($mh, $ch);
+
+            do
+            {
+                curl_multi_exec($mh, $running); //Execute handlers
+                while ($info = curl_multi_info_read($mh))
+                {
+                    $data = curl_multi_getcontent($info['handle']);
+                    $err = curl_error($info['handle']);
+                    $http_status = curl_getinfo($info['handle'], CURLINFO_HTTP_CODE);
+                    $err = curl_error($info['handle']);
+                    $realurl = curl_getinfo($info['handle'], CURLINFO_EFFECTIVE_URL);
+
+                    curl_multi_remove_handle($mh, $info['handle']);
+                }
+                usleep(10000);
+            } while ($running > 0);
+
+            curl_multi_close($mh);
+        }
+        else
+        {
+            $data = curl_exec($ch);
+            $err = curl_error($ch);
+            $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $err = curl_error($ch);
+            $realurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+            curl_close($ch);
+        }
+
         if ($data === FALSE)
         {
-            $err = curl_error($ch);
             return array('error' => ($err == '' ? 'Invalid host.' : $err));
         }
-        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err = curl_error($ch);
-        $realurl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
-        curl_close($ch);
 
         $host = parse_url($realurl, PHP_URL_HOST);
         $ip = false;
@@ -246,32 +275,7 @@ class MainWPUtility
 
         return null;
     }
-//
-//    private static function tryVisit($url)
-//    {
-//        $agent= 'Mozilla/4.0 (compatible; MSIE 5.01; Windows NT 5.0)';
-//        $ch = curl_init();
-//        curl_setopt($ch, CURLOPT_URL, $url);
-//        curl_setopt($ch, CURLOPT_USERAGENT, $agent);
-//        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-//        curl_setopt($ch, CURLOPT_VERBOSE, false);
-//        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-//        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-//        curl_setopt($ch, CURLOPT_SSLVERSION, 3);
-//        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
-//        $page = curl_exec($ch);
-//        //echo curl_error($ch);
-//        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-//        curl_close($ch);
-//        if ($httpcode >= 200 && $httpcode < 400) return true;
-//        else return false;
-//    }
 
-    /**
-     * @static
-     * @param $user WP_User object!
-     * @return
-     */
     static function getNotificationEmail($user = null)
     {
         if ($user == null)
@@ -520,7 +524,6 @@ class MainWPUtility
                 }
 
                 curl_multi_exec($mh, $running); //Execute handlers
-                //$ready = curl_multi_select($mh);
                 while ($info = curl_multi_info_read($mh))
                 {
                     $data = curl_multi_getcontent($info['handle']);
@@ -633,7 +636,12 @@ class MainWPUtility
             $tmpUrl = $url;
             if (substr($tmpUrl, -1) != '/') { $tmpUrl .= '/'; }
 
-            return self::_fetchUrl($website, $tmpUrl . 'wp-admin/', $postdata, $checkConstraints, $pForceFetch, $verifyCertificate);
+            if (strpos($url, 'wp-admin') === false)
+            {
+                $tmpUrl .= 'wp-admin/admin-ajax.php';
+            }
+
+            return self::_fetchUrl($website, $tmpUrl, $postdata, $checkConstraints, $pForceFetch, $verifyCertificate);
         }
         catch (Exception $e)
         {
@@ -1275,7 +1283,6 @@ class MainWPUtility
         $mainwp_url = "http://{$http_host}{$path}";
 
         $response = wp_remote_post( $mainwp_url, $http_args );
-//        return $response;
 
         if ( is_wp_error( $response ) )
         {
@@ -1287,26 +1294,6 @@ class MainWPUtility
         }
 
         return array( $response['headers'], $response['body'] );
-//        } else {
-//            $http_request  = "POST $path HTTP/1.0\r\n";
-//            $http_request .= "Host: $host\r\n";
-//            $http_request .= 'Content-Type: application/x-www-form-urlencoded; charset=' . get_option('blog_charset') . "\r\n";
-//            $http_request .= "Content-Length: {$content_length}\r\n";
-//            $http_request .= "User-Agent: {$akismet_ua}\r\n";
-//            $http_request .= "\r\n";
-//            $http_request .= $request;
-//
-//            $response = '';
-//            if( false != ( $fs = @fsockopen( $http_host, $port, $errno, $errstr, 10 ) ) ) {
-//                fwrite( $fs, $http_request );
-//
-//                while ( !feof( $fs ) )
-//                    $response .= fgets( $fs, 1160 ); // One TCP-IP packet
-//                fclose( $fs );
-//                $response = explode( "\r\n\r\n", $response, 2 );
-//            }
-//            return $response;
-//        }
     }
 
     static function trimSlashes($elem) { return trim($elem, '/'); }
@@ -1875,6 +1862,29 @@ class MainWPUtility
             if (isset($hide_usertips[$tip_id])) {                                                
                 return false;
             }            
+        }
+        return true;
+    }
+
+    public static function resetUserCookie($what, $value = "")
+    {
+        global $current_user;
+        if ($user_id = $current_user->ID) {
+            $reset_cookies = get_option("mainwp_reset_user_cookies");
+            if (!is_array($reset_cookies)) $reset_cookies = array();
+
+            if (!isset($reset_cookies[$user_id]) || !isset($reset_cookies[$user_id][$what])) {
+                $reset_cookies[$user_id][$what] = 1;
+                MainWPUtility::update_option("mainwp_reset_user_cookies", $reset_cookies);
+                update_user_option($user_id, "mainwp_saved_user_cookies", array());
+                return false;
+            }
+
+            $user_cookies = get_user_option('mainwp_saved_user_cookies');
+            if (!is_array($user_cookies)) $user_cookies = array();
+            if (!isset($user_cookies[$what])) {
+                return false;
+            }
         }
         return true;
     }
