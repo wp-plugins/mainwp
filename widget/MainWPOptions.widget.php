@@ -28,6 +28,7 @@ class MainWPOptions
                 MainWPUtility::update_option('mainwp_maximumComments', $_POST['mainwp_maximumComments']);
                 MainWPUtility::update_option('mainwp_cron_jobs', (!isset($_POST['mainwp_options_cron_jobs']) ? 0 : 1));
                 MainWPUtility::update_option('mainwp_wp_cron', (!isset($_POST['mainwp_options_wp_cron']) ? 0 : 1));
+                MainWPUtility::update_option('mainwp_use_favicon', (!isset($_POST['mainwp_use_favicon']) ? 0 : 1));
             }
 
             return true;
@@ -62,7 +63,7 @@ class MainWPOptions
         else $lastAutomaticUpdate = MainWPUtility::formatTimestamp(MainWPUtility::getTimestamp($lastAutomaticUpdate));
         ?>
     <div class="postbox" id="mainwp-hide-child-plugin-settings">
-        <h3 class="mainwp_box_title"><span><?php _e('Hide MainWP Child Plugin','mainwp'); ?></span></h3>
+        <h3 class="mainwp_box_title"><span><i class="fa fa-cog"></i> <?php _e('Hide MainWP Child Plugin','mainwp'); ?></span></h3>
         <div class="inside">
         <div class="mainwp_info-box-red" style="margin-top: 5px;"><?php _e('<strong>STOP BEFORE TURNING ON!</strong> Hiding the Child Plugin does require the plugin to make changes to your .htaccess file that in rare instances or server configurations could cause problems.','mainwp'); ?></div>
         <table class="form-table">
@@ -92,7 +93,7 @@ class MainWPOptions
     </div>
 
     <div class="postbox" id="mainwp-global-options-settings">
-    <h3 class="mainwp_box_title"><span><?php _e('Global Options','mainwp'); ?></span></h3>
+    <h3 class="mainwp_box_title"><span><i class="fa fa-cog"></i> <?php _e('Global Options','mainwp'); ?></span></h3>
     <div class="inside">
     <table class="form-table">
         <tbody>
@@ -123,7 +124,7 @@ class MainWPOptions
 <!--        </tr>-->
         <?php if (MainWPUtility::isAdmin()) { ?>
         <tr>
-            <th scope="row"><?php _e('Optimize for big networks','mainwp'); ?> <?php MainWPUtility::renderToolTip(__('Updates will be cached for quick loading. A manual refresh from the Dashboard is required to view new plugins, themes, pages or users. Recommended for Networks over 50 sites.','mainwp')); ?></th>
+            <th scope="row"><?php _e('Optimize for Shared Hosting or Big Networks','mainwp'); ?> <?php MainWPUtility::renderToolTip(__('Updates will be cached for quick loading. A manual refresh from the Dashboard is required to view new plugins, themes, pages or users. Recommended for Networks over 50 sites.','mainwp')); ?></th>
             <td>
             	<div class="mainwp-checkbox">
                 <input type="checkbox" name="mainwp_optimize"
@@ -142,6 +143,16 @@ class MainWPOptions
                </div>
             </td>
         </tr>
+         <tr>
+            <th scope="row"><?php _e('Use Child Site Favicon','mainwp'); ?> <?php MainWPUtility::renderToolTip(__('Set to YES if you want to use Child Site Favicon.','mainwp')); ?></th>
+            <td>
+            	<div class="mainwp-checkbox">
+                <input type="checkbox" name="mainwp_use_favicon"
+                       id="mainwp_use_favicon" <?php echo ((get_option('mainwp_use_favicon', 1) == 1) ? 'checked="true"' : ''); ?>"/>
+                <label for="mainwp_use_favicon"></label>
+               </div>
+            </td>
+        </tr>
         <?php } ?>
         </tbody>
     </table>
@@ -149,7 +160,7 @@ class MainWPOptions
     </div>
 
     <div class="postbox" id="mainwp-upgrade-options-settings">
-    <h3 class="mainwp_box_title"><span><?php _e('Upgrade Options','mainwp'); ?></span></h3>
+    <h3 class="mainwp_box_title"><span><i class="fa fa-cog"></i> <?php _e('Upgrade Options','mainwp'); ?></span></h3>
     <div class="inside">
     <table class="form-table">
         <tbody>
@@ -201,7 +212,7 @@ class MainWPOptions
     </div>
     
     <div class="postbox" id="mainwp-date-return-options-settings">
-    <h3 class="mainwp_box_title"><span><?php _e('Data Return Options','mainwp'); ?></span></h3>
+    <h3 class="mainwp_box_title"><span><i class="fa fa-cog"></i> <?php _e('Data Return Options','mainwp'); ?></span></h3>
     <div class="inside">
     <table class="form-table">
         <tbody>

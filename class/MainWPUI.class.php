@@ -6,7 +6,7 @@ class MainWPUI
 		?>
 		<div class="mainwp_select_sites_box<?php if ( $class ) echo " $class"; ?> mainwp_select_sites_wrapper"<?php if ( $style ) echo ' style="'.$style.'"'; ?>>
             <div class="postbox">
-                <h3 class="mainwp_box_title"><span><?php echo ( $title ) ? $title : translate('Select Sites', 'mainwp') ?> <div class="mainwp_sites_selectcount"><?php echo !is_array($selected_websites) ? '0' : count($selected_websites); ?></div></span></h3>
+                <h3 class="mainwp_box_title"><span><i class="fa fa-globe"></i> <?php echo ( $title ) ? $title : translate('Select Sites', 'mainwp') ?> <div class="mainwp_sites_selectcount"><?php echo !is_array($selected_websites) ? '0' : count($selected_websites); ?></div></span></h3>
                 <div class="inside mainwp_inside">
                     <?php self::select_sites_box_body($selected_websites, $selected_groups, $type, $show_group, $show_select_all, false, $enableOfflineSites); ?>
                 </div>
@@ -37,15 +37,24 @@ class MainWPUI
             {
                 while ($websites && ($website = @MainWPDB::fetch_object($websites)))
                 {
+                    $imgfavi = "";
+                    if ($website !== null) {
+                        if (get_option('mainwp_use_favicon', 1) == 1) {                            
+                            $favi = MainWPDB::Instance()->getWebsiteOption($website, 'favi_icon', "");
+                            $favi_url =     MainWPUtility::get_favico_url($favi, $website);
+                            $imgfavi = '<img src="' . $favi_url . '" width="16" height="16" style="vertical-align:middle;"/>&nbsp;';
+                        }
+                    }
+                    
                     if ($website->sync_errors == '' || $enableOfflineSites)
                     {
                     $selected = ($selected_websites == 'all' || in_array($website->id, $selected_websites));
 
-                    echo '<div class="mainwp_selected_sites_item '.($selected ? 'selected_sites_item_checked' : '').'"><input onClick="mainwp_site_select(this)" type="'.$type.'" name="' . ( $type == 'radio' ? 'selected_site' : 'selected_sites[]' ) . '" siteid="' . $website->id . '" value="' . $website->id . '" id="selected_sites_' . $website->id . '" '.($selected ? 'checked="true"' : '').'/> <label for="selected_sites_' . $website->id . '">' . $website->name . '<span class="url">' . $website->url . '</span>' . '</label></div>';
+                    echo '<div class="mainwp_selected_sites_item '.($selected ? 'selected_sites_item_checked' : '').'"><input onClick="mainwp_site_select(this)" type="'.$type.'" name="' . ( $type == 'radio' ? 'selected_site' : 'selected_sites[]' ) . '" siteid="' . $website->id . '" value="' . $website->id . '" id="selected_sites_' . $website->id . '" '.($selected ? 'checked="true"' : '').'/> <label for="selected_sites_' . $website->id . '">' . $imgfavi . $website->name . '<span class="url">' . $website->url . '</span>' . '</label></div>';
                     }
                     else
                     {
-                        echo '<div class="mainwp_selected_sites_item disabled"><input type="'.$type.'" disabled=disabled /> <label for="selected_sites_' . $website->id . '">' . $website->name . '<span class="url">' . $website->url . '</span>' . '</label></div>';
+                        echo '<div class="mainwp_selected_sites_item disabled"><input type="'.$type.'" disabled=disabled /> <label for="selected_sites_' . $website->id . '">' . $imgfavi . $website->name . '<span class="url">' . $website->url . '</span>' . '</label></div>';
                     }
                 }
                 @MainWPDB::free_result($websites);
