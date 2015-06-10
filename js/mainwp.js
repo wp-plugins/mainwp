@@ -2563,7 +2563,9 @@ mainwp_managesites_add = function (event) {
             name:jQuery('#mainwp_managesites_add_wpname').val(),
             url:url,
             admin:jQuery('#mainwp_managesites_add_wpadmin').val(),
-            verify_certificate:jQuery('#mainwp_managesites_verify_certificate').val()
+            verify_certificate:jQuery('#mainwp_managesites_verify_certificate').val(),
+            http_user:jQuery('#mainwp_managesites_add_http_user').val(),
+            http_pass:jQuery('#mainwp_managesites_add_http_pass').val()
         });
 
         jQuery.post(ajaxurl, data, function (res_things) {
@@ -2603,7 +2605,9 @@ mainwp_managesites_add = function (event) {
                     managesites_add_uniqueId:jQuery('#mainwp_managesites_add_uniqueId').val(),
                     'groupids[]':groupids,
                     groupnames:jQuery('#mainwp_managesites_add_addgroups').val(),
-                    verify_certificate:jQuery('#mainwp_managesites_verify_certificate').val()
+                    verify_certificate:jQuery('#mainwp_managesites_verify_certificate').val(),
+                    managesites_add_http_user:jQuery('#mainwp_managesites_add_http_user').val(),
+                    managesites_add_http_pass:jQuery('#mainwp_managesites_add_http_pass').val()
                 });
 
                 jQuery.post(ajaxurl, data, function (res_things) {
@@ -2691,7 +2695,9 @@ mainwp_managesites_test = function (event) {
         var data = mainwp_secure_data({
             action:'mainwp_testwp',
             url:url,
-            test_verify_cert: jQuery('#mainwp_managesites_test_verifycertificate').val()
+            test_verify_cert: jQuery('#mainwp_managesites_test_verifycertificate').val(),
+            http_user: jQuery('#mainwp_managesites_test_http_user').val(),
+            http_pass: jQuery('#mainwp_managesites_test_http_pass').val()
         });
         jQuery.post(ajaxurl, data, function (response) {
             managesites_init();
@@ -3245,6 +3251,31 @@ jQuery(document).on('keyup', '#selected_groups-filter', function() {
     mainwp_managebackups_updateExcludefolders();
     mainwp_newpost_updateCategories();
 });
+
+jQuery(document).on('keyup', '#mainwp-fly-manu-filter', function() {
+    var filter = jQuery(this).val();
+    var siteItems = jQuery('#mainwp-sites-menu').find('.mwp-child-site-item');
+    for (var i = 0; i < siteItems.length; i++)
+    {
+        var currentElement = jQuery(siteItems[i]);
+        var value = currentElement.find('a').text();
+        if (value.indexOf(filter) > -1)
+        {
+            currentElement.show();
+        }
+        else
+        {
+            currentElement.hide();
+            //20131124; changed, no deselect on other filter
+//            currentElement.removeClass('selected_groups_item_checked');
+//            currentElement.find('input').prop('checked', false);
+        }
+    }
+
+    mainwp_managebackups_updateExcludefolders();
+    mainwp_newpost_updateCategories();
+});
+
 mainwp_ss_select_by = function (me, what) {
     var parent = jQuery(me).closest('.mainwp_select_sites_wrapper');
     parent.find('#mainwp_ss_site_link').css('display', (what == 'site' ? 'none' : 'inline'));
@@ -6943,3 +6974,14 @@ mainwp_check_showhide_sections = function() {
         }
     }); 
 }
+
+jQuery(document).on('click', '#mainwp-sites-menu-button', function(){
+   jQuery('#mainwp-sites-menu').slideToggle();
+   jQuery("#mainwp-sites-menu").scrollTop( 10000000 );
+   return false;
+});
+
+jQuery(document).on('click', '#mainwp-add-new-button', function(){
+   jQuery('#mainwp-add-new-links').slideToggle();
+   return false;
+});
