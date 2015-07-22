@@ -113,8 +113,6 @@ class MainWPUser
         
         $cachedSearch = MainWPCache::getCachedContext('Users');
         self::renderHeader(''); ?>
-        <div class="mainwp_info-box"><strong><?php _e('Use this to bulk change password, change role or delete users. To add new users click on the "Add New" tab.','mainwp'); ?></strong></div>
-        <br/>
          <div>
             <div class="postbox mainwp-postbox" style="width: 555px !important;">
             <h3 class="mainwp_box_title"><i class="fa fa-binoculars"></i> <?php _e('Search Users','mainwp'); ?></h3>
@@ -845,7 +843,7 @@ class MainWPUser
             ?>
         <div id="message" class="updated">
             <?php foreach ($dbwebsites as $website) { ?>
-            <p><a href="<?php echo admin_url('admin.php?page=managesites&dashboard=' . $website->id); ?>"><?php echo $website->name; ?></a>
+            <p><a href="<?php echo admin_url('admin.php?page=managesites&dashboard=' . $website->id); ?>"><?php echo stripslashes($website->name); ?></a>
                 : <?php echo (isset($output->ok[$website->id]) && $output->ok[$website->id] == 1 ? 'New user created.' : 'ERROR: ' . $output->errors[$website->id]); ?></p>
             <?php } ?>
         </div>
@@ -1035,10 +1033,10 @@ class MainWPUser
          $ret['ok_list'] = $ret['error_list'] = array(); 
          foreach ($dbwebsites as $website) {
             if (isset($output->ok[$website->id]) && $output->ok[$website->id] == 1) {
-                $ret['ok_list'][] = 'New user(s) created: '.$website->name; 
+                $ret['ok_list'][] = 'New user(s) created: '. stripslashes($website->name); 
             } 
             else {
-                $ret['error_list'][] = $output->errors[$website->id] . " " . $website->name;          
+                $ret['error_list'][] = $output->errors[$website->id] . " " . stripslashes($website->name);          
                 $error_sites .= $website->url . ";";                         
             }    
          }
